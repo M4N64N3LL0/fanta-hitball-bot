@@ -30,20 +30,20 @@ def calcola_bonus_squadra(p_fatti, p_subiti):
     elif p_subiti >= 101: bonus -= 5.0
     return bonus
 
-def estrai_valori(testo_riga):
-    """Estrae h2, h3, autohit analizzando ogni singola parola della riga"""
+def estrai_valori_avanzato(testo_html):
+    """Analisi profonda per intercettare i numeri attaccati o staccati dalle 'X'"""
     h2, h3, ah = 0, 0, 0
-    testo = testo_riga.upper().replace(" ", "")
+    testo = testo_html.upper()
     
-    # Regex migliorata: cerca cifre seguite dal tipo di punto
-    r2 = re.search(r'(\d+)X2', testo)
-    if r2: h2 = int(r2.group(1))
+    # Cerca il numero immediatamente precedente a X2, X3 o AUTOHIT
+    m2 = re.findall(r'(\d+)\s*X2', testo)
+    if m2: h2 = sum(int(x) for x in m2)
     
-    r3 = re.search(r'(\d+)X3', testo)
-    if r3: h3 = int(r3.group(1))
+    m3 = re.findall(r'(\d+)\s*X3', testo)
+    if m3: h3 = sum(int(x) for x in m3)
     
-    rah = re.search(r'(\d+)AUTOHIT', testo)
-    if rah: ah = int(rah.group(1))
+    mah = re.findall(r'(\d+)\s*AUTOHIT', testo)
+    if mah: ah = sum(int(x) for x in mah)
     
     return h2, h3, ah
 
@@ -54,20 +54,20 @@ def scraper_professionale():
     campionati = {
         "A1": "39", "A2": "41", "B1": "42", "B2": "43", "FEM": "47"
     }
-
     lista_femm = ["Federica Funnone", "Martina Lupo", "Sabrina Capitolo", "Arianna Vismara", "Sabrina Zanfretta", "Sara Sottolano", "Martina Bracesco", "Rossella De Blasio", "Carlotta Amodeo", "Federica Amorelli", "Elena Pasino", "Mara Ferraris", "Alice La Versa", "Noemi Castelluccio", "Chiara Gilardi"]
     giocatori_db = {}
 
     for cat_nome, c_id in campionati.items():
         url = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={c_id}"
-        print(f"Analisi: {cat_nome}")
-        r = requests.get(url)
-        soup = BeautifulSoup(r.text, 'html.parser')
+        print(f"Scansione: {cat_nome}")
+        try:
+            r = requests.get(url)
+            soup = BeautifulSoup(r.text, 'html.parser')
+        except:
+            continue
         
-        # Trova tutte le tabelle (giornate)
         tabelle = soup.find_all('div', class_='table-responsive')
         for tab in tabelle:
-            # Trova il titolo della giornata sopra la tabella
             h_titolo = tab.find_previous(['h3', 'h4', 'b'])
             match_g = re.search(r'Giornata\s+(\d+)', h_titolo.get_text() if h_titolo else "1", re.I)
             g_id = match_g.group(1) if match_g else "1"
@@ -85,12 +85,11 @@ def scraper_professionale():
                         p_h_squadra = 0
                         ah_squadra = 0
                         items = ul.find_all('li', class_='list-group-item')
-                        dati_giocatori = []
+                        dati = []
                         for it in items:
-                            # Prende TUTTO il testo dentro il blocco del giocatore
-                            testo_completo = it.get_text(separator=" ").strip()
+                            testo_completo = it.get_text(separator=" ")
                             nome = list(it.stripped_strings)[0]
-                            h2, h3, ah = estrai_valori(testo_completo)
+                            h2, h3, ah = estrai_valori_avanzato(testo_completo)
                             
                             p_h_squadra += (h2 * 2) + (h3 * 3)
                             ah_squadra += ah
@@ -98,10 +97,8 @@ def scraper_professionale():
                             amm = len(it.find_all('i', class_='text-warning'))
                             esp = len(it.find_all('i', class_='text-danger'))
                             
-                            dati_giocatori.append({
-                                'nome': nome, 'h2': h2, 'h3': h3, 'ah': ah, 'amm': amm, 'esp': esp
-                            })
-                        return p_h_squadra, ah_squadra, dati_giocatori
+                            dati.append({'nome': nome, 'h2': h2, 'h3': h3, 'ah': ah, 'amm': amm, 'esp': esp})
+                        return p_h_squadra, ah_squadra, dati
 
                     phA, ahA, gA = processa_team(uls[0])
                     phB, ahB, gB = processa_team(uls[1])
@@ -119,7 +116,8 @@ def scraper_professionale():
                             if g['nome'] not in giocatori_db:
                                 giocatori_db[g['nome']] = {"punti_giornate": {}, "categoria": cat_nome}
                             giocatori_db[g['nome']]["punti_giornate"][g_id] = p_tot
-                except: continue
+                except Exception as e:
+                    continue
 
     batch = db.batch()
     for n, d in giocatori_db.items():
@@ -129,6 +127,7 @@ def scraper_professionale():
         d["nome_visualizzato"] = n
         batch.set(db.collection("giocatori").document(n), d, merge=True)
     batch.commit()
-    print("DATABASE AGGIORNATO!")
+    print("AGGIORNAMENTO FIREBASE COMPLETATO")
 
-if __name__ == "__main__": scraper_professionale()
+if __name__ == "__main__": 
+    scraper_professionale()
