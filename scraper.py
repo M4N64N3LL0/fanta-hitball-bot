@@ -20,15 +20,24 @@ def avvia_firebase():
 
 def calcola_bonus_squadra(p_fatti, p_subiti):
     bonus = 0.0
-    if p_fatti >= 76: bonus += 3.0
-    elif 51 <= p_fatti <= 75: bonus += 2.0
     
-    if p_subiti <= 50: bonus += 5.0
-    elif 51 <= p_subiti <= 75: bonus += 2.0
-    elif p_subiti >= 101: bonus -= 5.0
+    # --- BONUS PUNTI SEGNATI ---
+    if p_fatti >= 76: 
+        bonus += 5.0 # Cambiato da +3 a +5 secondo tue regole
+    elif 51 <= p_fatti <= 75: 
+        bonus += 2.0
+    # 0-50 rimane +0.0
     
-    if p_fatti > p_subiti: bonus += 2.0
-    elif p_fatti == p_subiti: bonus += 1.0
+    # --- BONUS/MALUS PUNTI SUBITI ---
+    if p_subiti <= 50: 
+        bonus += 5.0
+    elif 51 <= p_subiti <= 75: 
+        bonus += 2.0
+    elif p_subiti >= 101: 
+        bonus -= 5.0
+    # 76-100 rimane +0.0
+    
+    # Rimosso Bonus Vittoria/Pareggio (non presente nei tuoi criteri)
     return bonus
 
 def scraper_professionale():
@@ -104,7 +113,11 @@ def scraper_professionale():
                 for lista, b_t in [(gA, bonA), (gB, bonB)]:
                     for g in lista:
                         molt = 2.0 if g['nome'] in lista_femm else 1.0
-                        p_tot = (((g['h2'] + g['h3']) * molt) - g['ah'] - (g['amm'] * 10) - (g['esp'] * 20)) + b_t
+                        # --- CALCOLO PUNTI INDIVIDUALE ---
+                        # Hit * Molt - Autohit - Ammonizione(-10) - Espulsione(-20)
+                        p_indiv = ((g['h2'] + g['h3']) * molt) - g['ah'] - (g['amm'] * 10) - (g['esp'] * 20)
+                        p_tot = p_indiv + b_t
+                        
                         if g['nome'] not in giocatori_db:
                             giocatori_db[g['nome']] = {"punti_giornate": {}, "categoria": cat_nome}
                         giocatori_db[g['nome']]["punti_giornate"][str(g_id)] = giocatori_db[g['nome']]["punti_giornate"].get(str(g_id), 0) + p_tot
@@ -114,13 +127,13 @@ def scraper_professionale():
     batch = db.batch()
     count = 0
     for n, d in giocatori_db.items():
-        # Scrive solo punti e giornate. Prezzo non viene menzionato = non viene toccato.
         aggiornamento = {
             "punteggio_campionato": sum(d["punti_giornate"].values()),
             "punti_giornate": d["punti_giornate"],
             "nome_reale": n,
             "categoria": d["categoria"]
         }
+        # merge=True garantisce che il campo 'prezzo' non venga toccato
         batch.set(db.collection("giocatori").document(n), aggiornamento, merge=True)
         count += 1
         if count == 450:
@@ -128,6 +141,6 @@ def scraper_professionale():
             batch = db.batch()
             count = 0
     if count > 0: batch.commit()
-    print(f"FINITO: Aggiornati {len(giocatori_db)} giocatori. Prezzi bloccati.")
+    print(f"FINITO: Aggiornati {len(giocatori_db)} giocatori con i nuovi criteri.")
 
 if __name__ == "__main__": scraper_professionale()
