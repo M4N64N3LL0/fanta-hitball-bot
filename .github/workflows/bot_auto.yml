@@ -1,0 +1,27 @@
+name: Aggiornamento Punti FantaHitball
+
+on:
+  schedule:
+    # Si attiva ogni lunedì alle 08:00 UTC (9:00 italiane)
+    - cron: '0 8 * * 1'
+  workflow_dispatch: # Permette di farlo partire anche a mano quando vuoi
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scarica codice
+        uses: actions/checkout@v3
+
+      - name: Imposta Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Installa librerie
+        run: pip install -r requirements.txt
+
+      - name: Esegui Scraper
+        env:
+          FIREBASE_KEY: ${{ secrets.FIREBASE_KEY }}
+        run: python scraper.py
