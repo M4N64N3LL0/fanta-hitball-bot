@@ -20,11 +20,22 @@ def avvia_firebase():
 
 def calcola_bonus_squadra(p_fatti, p_subiti):
     bonus = 0.0
+    
+    # 1. Bonus Offesa
     if 51 <= p_fatti <= 75: bonus += 2.0
     elif p_fatti >= 76: bonus += 3.0
+    
+    # 2. Bonus Difesa
     if p_subiti <= 50: bonus += 5.0
     elif 51 <= p_subiti <= 75: bonus += 2.0
     elif p_subiti >= 101: bonus -= 5.0
+    
+    # 3. Bonus Vittoria / Pareggio
+    if p_fatti > p_subiti:
+        bonus += 2.0
+    elif p_fatti == p_subiti:
+        bonus += 1.0
+        
     return bonus
 
 def scraper_professionale():
@@ -37,53 +48,53 @@ def scraper_professionale():
     
     for cat_nome, c_id in campionati.items():
         url = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={c_id}"
-        print(f"-> Analisi: {cat_nome}")
+        print(f"-> Analisi Campionato: {cat_nome}")
         try:
             r = requests.get(url)
             soup = BeautifulSoup(r.text, 'html.parser')
         except: continue
         
-        links = set()
+        mappa_partite = {}
         for a in soup.find_all('a', href=True):
             if 'route=match/result' in a['href']:
-                links.add(urllib.parse.urljoin("https://referto.plvhitball.it/", a['href']))
+                link = urllib.parse.urljoin("https://referto.plvhitball.it/", a['href'])
+                g_id = "1"
+                prev = a.find_previous(['h2', 'h3', 'h4', 'div', 'b', 'strong', 'th'])
+                for _ in range(10):
+                    if not prev: break
+                    testo = prev.get_text(separator=" ", strip=True)
+                    if 'giornata' in testo.lower():
+                        match_g = re.search(r'(?i)(?:giornata\s*(\d+))|(?:(\d+)[°ªa^\'\.]?\s*giornata)', testo)
+                        if match_g:
+                            g_id = match_g.group(1) or match_g.group(2)
+                            break
+                    prev = prev.find_previous(['h2', 'h3', 'h4', 'div', 'b', 'strong', 'th'])
+                mappa_partite[link] = g_id
         
-        for l in links:
+        for l, g_id in mappa_partite.items():
             try:
                 rp = requests.get(l)
                 sp = BeautifulSoup(rp.text, 'html.parser')
                 
-                h_titolo = sp.find(['h3', 'h4', 'h2'])
-                match_g = re.search(r'Giornata\s+(\d+)', h_titolo.get_text() if h_titolo else sp.get_text(), re.I)
-                g_id = match_g.group(1) if match_g else "1"
-                
-                # 1. Troviamo TUTTI i potenziali giocatori esplorando l'intera pagina
-                player_nodes = sp.find_all(['li', 'tr', 'div'])
                 valid_nodes = []
-                
-                for node in player_nodes:
-                    # Sostituisce le icone con X per non perdere i moltiplicatori
+                for node in sp.find_all(['li', 'tr', 'div']):
                     for i_tag in node.find_all(['i', 'span']):
                         c = str(i_tag.get('class', [])).lower()
                         if 'times' in c or 'close' in c: i_tag.replace_with(" X ")
                     testo = node.get_text(separator=" ", strip=True).upper().replace('×', 'X').replace('*', 'X')
-                    
-                    # Se la riga ha la forma di un referto giocatore, la teniamo
                     if re.search(r'X\s*2|X\s*3|AUTOHIT', testo):
-                        valid_nodes.append(node)
+                        valid_nodes.append((node, testo))
                 
                 if not valid_nodes: continue
                 
-                # 2. Raggruppiamoli nei loro contenitori (Team A e Team B)
                 containers = []
-                for node in valid_nodes:
+                for node, testo in valid_nodes:
                     parent = node.find_parent(['ul', 'tbody', 'table'])
                     if parent and parent not in containers:
                         containers.append(parent)
                 
-                if len(containers) < 2: continue # Se non trova due squadre, salta
+                if len(containers) < 2: continue
                 
-                # 3. Estrazione dati
                 def processa_team(parent_node):
                     p_h, ah_s = 0, 0
                     dati = []
@@ -97,7 +108,6 @@ def scraper_professionale():
                         h2 = sum(int(x) for x in re.findall(r'(\d+)\s*X\s*2', testo))
                         h3 = sum(int(x) for x in re.findall(r'(\d+)\s*X\s*3', testo))
                         ah = sum(int(x) for x in re.findall(r'(\d+)\s*AUTOHIT', testo))
-                        
                         amm = len(n.find_all(['i', 'span'], class_=re.compile(r'warning', re.I)))
                         esp = len(n.find_all(['i', 'span'], class_=re.compile(r'danger', re.I)))
                         
@@ -121,7 +131,10 @@ def scraper_professionale():
                         
                         if g['nome'] not in giocatori_db:
                             giocatori_db[g['nome']] = {"punti_giornate": {}, "categoria": cat_nome}
-                        giocatori_db[g['nome']]["punti_giornate"][g_id] = p_tot
+                        if str(g_id) in giocatori_db[g['nome']]["punti_giornate"]:
+                            giocatori_db[g['nome']]["punti_giornate"][str(g_id)] += p_tot
+                        else:
+                            giocatori_db[g['nome']]["punti_giornate"][str(g_id)] = p_tot
             except Exception as e: continue
 
     print("\nSalvataggio su Firebase in corso...")
@@ -131,7 +144,7 @@ def scraper_professionale():
         d["prezzo"] = max(10, int(d["punteggio_campionato"] * 2))
         d["nome_reale"] = n
         d["nome_visualizzato"] = n
-        batch.set(db.collection("giocatori").document(n), d) # Sovrascrittura pura per pulire vecchi errori
+        batch.set(db.collection("giocatori").document(n), d)
     batch.commit()
     print("FINITO: Database Aggiornato con Successo!")
 
