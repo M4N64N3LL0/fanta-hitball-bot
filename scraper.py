@@ -20,22 +20,13 @@ def avvia_firebase():
 
 def calcola_bonus_squadra(p_fatti, p_subiti):
     bonus = 0.0
-    
-    # 1. Bonus Offesa
     if 51 <= p_fatti <= 75: bonus += 2.0
     elif p_fatti >= 76: bonus += 3.0
-    
-    # 2. Bonus Difesa
     if p_subiti <= 50: bonus += 5.0
     elif 51 <= p_subiti <= 75: bonus += 2.0
     elif p_subiti >= 101: bonus -= 5.0
-    
-    # 3. Bonus Vittoria / Pareggio
-    if p_fatti > p_subiti:
-        bonus += 2.0
-    elif p_fatti == p_subiti:
-        bonus += 1.0
-        
+    if p_fatti > p_subiti: bonus += 2.0
+    elif p_fatti == p_subiti: bonus += 1.0
     return bonus
 
 def scraper_professionale():
@@ -48,47 +39,53 @@ def scraper_professionale():
     
     for cat_nome, c_id in campionati.items():
         url = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={c_id}"
-        print(f"-> Analisi Campionato: {cat_nome}")
+        print(f"\n-> Analisi Campionato: {cat_nome}")
         try:
             r = requests.get(url)
             soup = BeautifulSoup(r.text, 'html.parser')
         except: continue
         
         mappa_partite = {}
+        
+        # 1. MAPPATURA PERFETTA BASATA SULLO SCREENSHOT
         for a in soup.find_all('a', href=True):
             if 'route=match/result' in a['href']:
                 link = urllib.parse.urljoin("https://referto.plvhitball.it/", a['href'])
-                g_id = "1"
-                prev = a.find_previous(['h2', 'h3', 'h4', 'div', 'b', 'strong', 'th'])
-                for _ in range(10):
-                    if not prev: break
-                    testo = prev.get_text(separator=" ", strip=True)
-                    if 'giornata' in testo.lower():
-                        match_g = re.search(r'(?i)(?:giornata\s*(\d+))|(?:(\d+)[°ªa^\'\.]?\s*giornata)', testo)
-                        if match_g:
-                            g_id = match_g.group(1) or match_g.group(2)
-                            break
-                    prev = prev.find_previous(['h2', 'h3', 'h4', 'div', 'b', 'strong', 'th'])
+                
+                # Cerca il testo andando indietro dal link, fregandosene dei tag HTML
+                # Cerca "Giornata X" oppure "X Giornata"
+                nodo_testo = a.find_previous(string=re.compile(r'giornata\s*\d+|\d+[^\w]*giornata', re.I))
+                g_id = "1" # Sicurezza base
+                
+                if nodo_testo:
+                    testo = str(nodo_testo).lower()
+                    match_g = re.search(r'giornata\s*(\d+)|(\d+)[^\w]*giornata', testo)
+                    if match_g:
+                        g_id = match_g.group(1) or match_g.group(2)
+                
                 mappa_partite[link] = g_id
+
+        print(f"Mappate {len(mappa_partite)} partite.")
         
+        # 2. LETTURA REFERTI
         for l, g_id in mappa_partite.items():
             try:
                 rp = requests.get(l)
                 sp = BeautifulSoup(rp.text, 'html.parser')
                 
                 valid_nodes = []
-                for node in sp.find_all(['li', 'tr', 'div']):
+                for node in sp.find_all(['li', 'tr']):
                     for i_tag in node.find_all(['i', 'span']):
                         c = str(i_tag.get('class', [])).lower()
                         if 'times' in c or 'close' in c: i_tag.replace_with(" X ")
-                    testo = node.get_text(separator=" ", strip=True).upper().replace('×', 'X').replace('*', 'X')
-                    if re.search(r'X\s*2|X\s*3|AUTOHIT', testo):
-                        valid_nodes.append((node, testo))
+                    testo_nodo = node.get_text(separator=" ", strip=True).upper().replace('×', 'X').replace('*', 'X')
+                    if re.search(r'X\s*2|X\s*3|AUTOHIT', testo_nodo):
+                        valid_nodes.append(node)
                 
                 if not valid_nodes: continue
                 
                 containers = []
-                for node, testo in valid_nodes:
+                for node in valid_nodes:
                     parent = node.find_parent(['ul', 'tbody', 'table'])
                     if parent and parent not in containers:
                         containers.append(parent)
@@ -131,6 +128,7 @@ def scraper_professionale():
                         
                         if g['nome'] not in giocatori_db:
                             giocatori_db[g['nome']] = {"punti_giornate": {}, "categoria": cat_nome}
+                        
                         if str(g_id) in giocatori_db[g['nome']]["punti_giornate"]:
                             giocatori_db[g['nome']]["punti_giornate"][str(g_id)] += p_tot
                         else:
@@ -139,14 +137,24 @@ def scraper_professionale():
 
     print("\nSalvataggio su Firebase in corso...")
     batch = db.batch()
+    count = 0
+    
     for n, d in giocatori_db.items():
         d["punteggio_campionato"] = sum(d["punti_giornate"].values())
         d["prezzo"] = max(10, int(d["punteggio_campionato"] * 2))
         d["nome_reale"] = n
         d["nome_visualizzato"] = n
         batch.set(db.collection("giocatori").document(n), d)
-    batch.commit()
-    print("FINITO: Database Aggiornato con Successo!")
+        
+        count += 1
+        if count == 450:
+            batch.commit()
+            batch = db.batch()
+            count = 0
+            
+    if count > 0:
+        batch.commit()
+    print(f"FINITO: Salvati {len(giocatori_db)} giocatori con Successo!")
 
 if __name__ == "__main__": 
     scraper_professionale()
