@@ -8,8 +8,7 @@ import json
 import re
 
 def avvia_firebase():
-    if firebase_admin._apps:
-        return firestore.client()
+    if firebase_admin._apps: return firestore.client()
     firebase_secret = os.environ.get("FIREBASE_KEY")
     try:
         if firebase_secret:
@@ -20,37 +19,35 @@ def avvia_firebase():
         firebase_admin.initialize_app(cred)
         return firestore.client()
     except Exception as e:
-        print(f"Errore Firebase: {e}")
-        return None
+        print(f"Errore Firebase: {e}"); return None
 
 def calcola_bonus_squadra(punti_fatti, punti_subiti):
     bonus = 0.0
     if 51 <= punti_fatti <= 75: bonus += 2.0
     elif punti_fatti >= 76: bonus += 3.0
-    
     if punti_subiti <= 50: bonus += 5.0
     elif 51 <= punti_subiti <= 75: bonus += 2.0
     elif punti_subiti >= 101: bonus -= 5.0
     return bonus
 
-def estrai_dati_squadra(team_list):
-    h2_tot, h3_tot, ah_tot = 0, 0, 0
-    giocatori_html = team_list.find_all('li', class_='list-group-item')
-    for blocco in giocatori_html:
-        testi = list(blocco.stripped_strings)
-        # Cerchiamo i pattern x2, x3 e AUTOHIT nel testo del giocatore
-        for t in testi:
-            t_pulito = t.upper().replace(' ', '')
-            if 'X2' in t_pulito:
-                val = re.findall(r'(\d+)X2', t_pulito)
-                if val: h2_tot += int(val[0])
-            if 'X3' in t_pulito:
-                val = re.findall(r'(\d+)X3', t_pulito)
-                if val: h3_tot += int(val[0])
-            if 'AUTOHIT' in t_pulito:
-                val = re.findall(r'(\d+)AUTOHIT', t_pulito)
-                if val: ah_tot += int(val[0])
-    return (h2_tot * 2) + (h3_tot * 3), ah_tot, giocatori_html
+def estrai_numeri_da_testo(lista_testi):
+    """Estrae con precisione chirurgica h2, h3 e autohit dalla riga del giocatore"""
+    h2, h3, ah = 0, 0, 0
+    testo_unito = " ".join(lista_testi).upper().replace(" ", "")
+    
+    # Cerca numeri seguiti da X2 (es: 9X2)
+    m2 = re.findall(r'(\d+)X2', testo_unito)
+    if m2: h2 = sum(int(x) for x in m2)
+    
+    # Cerca numeri seguiti da X3 (es: 1X3)
+    m3 = re.findall(r'(\d+)X3', testo_unito)
+    if m3: h3 = sum(int(x) for x in m3)
+    
+    # Cerca numeri seguiti da AUTOHIT (es: 2AUTOHIT)
+    mah = re.findall(r'(\d+)AUTOHIT', testo_unito)
+    if mah: ah = sum(int(x) for x in mah)
+    
+    return h2, h3, ah
 
 def scraper_professionale():
     db = avvia_firebase()
@@ -65,24 +62,21 @@ def scraper_professionale():
     }
 
     lista_femm = ["Federica Funnone", "Martina Lupo", "Sabrina Capitolo", "Arianna Vismara", "Sabrina Zanfretta", "Sara Sottolano", "Martina Bracesco", "Rossella De Blasio", "Carlotta Amodeo", "Federica Amorelli", "Elena Pasino", "Mara Ferraris", "Alice La Versa", "Noemi Castelluccio", "Chiara Gilardi"]
-    giocatori_data = {}
+    giocatori_db = {}
 
     for cat_nome, url in campionati.items():
-        print(f"Analisi campionato: {cat_nome}")
+        print(f"Scansione: {cat_nome}")
         r = requests.get(url)
         soup = BeautifulSoup(r.text, 'html.parser')
         
-        # Cerchiamo tutti i titoli delle giornate (h3 o h4)
-        titoli_giornate = soup.find_all(['h3', 'h4'])
-        
-        for titolo in titoli_giornate:
-            testo_titolo = titolo.get_text()
-            match_g = re.search(r'Giornata\s+(\d+)', testo_titolo, re.I)
+        # Cerchiamo tutte le sezioni delle giornate
+        sezioni = soup.find_all(['h3', 'h4', 'b'])
+        for s in sezioni:
+            match_g = re.search(r'Giornata\s+(\d+)', s.get_text(), re.I)
             if not match_g: continue
-            
             g_id = match_g.group(1)
-            # La tabella dei referti è l'elemento successivo al titolo
-            tabella = titolo.find_next('div', class_='table-responsive')
+            
+            tabella = s.find_next('div', class_='table-responsive')
             if not tabella: continue
             
             links = [urllib.parse.urljoin("https://referto.plvhitball.it/", a['href']) for a in tabella.find_all('a', href=True) if 'route=match/result' in a['href']]
@@ -91,58 +85,61 @@ def scraper_professionale():
                 try:
                     rp = requests.get(l)
                     sp = BeautifulSoup(rp.text, 'html.parser')
-                    team_lists = sp.find_all('ul', class_='list-group')
-                    
-                    if len(team_lists) >= 2:
-                        p_A_h, ah_A, g_A = estrai_dati_squadra(team_lists[0])
-                        p_B_h, ah_B, g_B = estrai_dati_squadra(team_lists[1])
-                        
-                        sc_A, sc_B = p_A_h + ah_B, p_B_h + ah_A
-                        tav_A = -20.0 if (p_A_h == 0 and "tavolino" in sp.text.lower()) else 0.0
-                        tav_B = -20.0 if (p_B_h == 0 and "tavolino" in sp.text.lower()) else 0.0
+                    team_uls = sp.find_all('ul', class_='list-group')
+                    if len(team_uls) < 2: continue
 
-                        bon_A, bon_B = calcola_bonus_squadra(sc_A, sc_B), calcola_bonus_squadra(sc_B, sc_A)
-                        
-                        for lista_g, bonus_t, malus_t in [(g_A, bon_A, tav_A), (g_B, bon_B, tav_B)]:
-                            for item in lista_g:
-                                info = list(item.stripped_strings)
-                                if not info: continue
-                                nome = info[0]
-                                
-                                # Calcolo singoli hit per questo giocatore
-                                h2, h3, ah, amm, esp = 0, 0, 0, 0, 0
-                                for t in info:
-                                    t_u = t.upper().replace(' ','')
-                                    if 'X2' in t_u: h2 = int(re.findall(r'(\d+)X2', t_u)[0])
-                                    if 'X3' in t_u: h3 = int(re.findall(r'(\d+)X3', t_u)[0])
-                                    if 'AUTOHIT' in t_u: ah = int(re.findall(r'(\d+)AUTOHIT', t_u)[0])
-                                
-                                amm = len(item.find_all('i', class_='text-warning'))
-                                esp = len(item.find_all('i', class_='text-danger'))
-                                molt = 2.0 if nome in lista_femm else 1.0
-                                
-                                p_giocatore = ((h2 + h3) * molt) - ah - (amm * 10) - (esp * 20)
-                                totale_giornata = p_giocatore + bonus_t + malus_t
+                    # Calcolo punti totali squadra per i bonus
+                    def get_stats_squadra(ul):
+                        p_h = 0
+                        ah_squadra = 0
+                        giocatori = ul.find_all('li', class_='list-group-item')
+                        for g in giocatori:
+                            h2, h3, ah = estrai_numeri_da_testo(list(g.stripped_strings))
+                            p_h += (h2 * 2) + (h3 * 3)
+                            ah_squadra += ah
+                        return p_h, ah_squadra, giocatori
 
-                                if nome not in giocatori_data:
-                                    giocatori_data[nome] = {"punti_giornate": {}}
-                                
-                                giocatori_data[nome]["punti_giornate"][g_id] = totale_giornata
+                    pA_h, ahA, gA = get_stats_squadra(team_uls[0])
+                    pB_h, ahB, gB = get_stats_squadra(team_uls[1])
+
+                    scA, scB = pA_h + ahB, pB_h + ahA
+                    bonA, bonB = calcola_bonus_squadra(scA, scB), calcola_bonus_squadra(scB, scA)
+                    tavA = -20.0 if (pA_h == 0 and "tavolino" in sp.text.lower()) else 0.0
+                    tavB = -20.0 if (pB_h == 0 and "tavolino" in sp.text.lower()) else 0.0
+
+                    for lista_g, b_team, m_tav in [(gA, bonA, tavA), (gB, bonB, tavB)]:
+                        for item in lista_g:
+                            info = list(item.stripped_strings)
+                            if not info: continue
+                            nome = info[0]
+                            h2, h3, ah = estrai_numeri_da_testo(info)
+                            
+                            amm = len(item.find_all('i', class_='text-warning'))
+                            esp = len(item.find_all('i', class_='text-danger'))
+                            molt = 2.0 if nome in lista_femm else 1.0
+                            
+                            p_base = ((h2 + h3) * molt) - ah - (amm * 10) - (esp * 20)
+                            p_finale = p_base + b_team + m_tav
+
+                            if nome not in giocatori_db: 
+                                giocatori_db[nome] = {"punti_giornate": {}, "categoria": cat_nome}
+                            
+                            giocatori_db[nome]["punti_giornate"][g_id] = p_finale
                 except: continue
 
-    # Calcolo dei totali e caricamento
-    print("Salvataggio dati...")
+    print("Aggiornamento Firebase...")
     batch = db.batch()
-    for nome, data in giocatori_data.items():
-        punti_map = data["punti_giornate"]
-        totale_camp = sum(punti_map.values())
-        data["punteggio_campionato"] = totale_camp
+    for nome, dati in giocatori_db.items():
+        dati["punteggio_campionato"] = sum(dati["punti_giornate"].values())
+        dati["nome_reale"] = nome
+        dati["nome_visualizzato"] = nome
+        # Calcolo prezzo dinamico (minimo 10)
+        dati["prezzo"] = max(10, int(dati["punteggio_campionato"] * 2))
         
         doc_ref = db.collection("giocatori").document(nome)
-        batch.set(doc_ref, data, merge=True)
-        
+        batch.set(doc_ref, dati, merge=True)
     batch.commit()
-    print("=== AGGIORNAMENTO COMPLETATO CON SUCCESSO ===")
+    print("FINITO!")
 
 if __name__ == "__main__":
     scraper_professionale()
