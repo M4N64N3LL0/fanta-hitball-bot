@@ -34,6 +34,7 @@ def scraper_professionale():
     if not db: return 
 
     campionati = {"A1": "39", "A2": "41", "B1": "42", "B2": "43", "FEM": "47"}
+    # Lista giocatrici femminili per raddoppio Hit
     lista_femm = ["Federica Funnone", "Martina Lupo", "Sabrina Capitolo", "Arianna Vismara", "Sabrina Zanfretta", "Sara Sottolano", "Martina Bracesco", "Rossella De Blasio", "Carlotta Amodeo", "Federica Amorelli", "Elena Pasino", "Mara Ferraris", "Alice La Versa", "Noemi Castelluccio", "Chiara Gilardi"]
     giocatori_db = {}
     
@@ -98,12 +99,15 @@ def scraper_professionale():
                 for lista, b_t in [(gA, bonA), (gB, bonB)]:
                     for g in lista:
                         molt = 2.0 if g['nome'] in lista_femm else 1.0
-                        # Punteggio: (Hit * Molt) - Autohit - Ammonizione(-10) - Espulsione(-20) + Bonus Squadra
+                        # Calcolo base giornata
                         p_tot = (((g['h2'] + g['h3']) * molt) - g['ah'] - (g['amm'] * 10) - (g['esp'] * 20)) + b_t
+                        
                         if g['nome'] not in giocatori_db:
                             giocatori_db[g['nome']] = {"punti_giornate": {}, "categoria": cat_nome}
-                        # Sovrascrive per evitare doppioni nella stessa giornata
-                        giocatori_db[g['nome']]["punti_giornate"][g_id] = p_tot
+                        
+                        # --- FIX: SOMMA INVECE DI SOVRASCRIVERE ---
+                        current_pts = giocatori_db[g['nome']]["punti_giornate"].get(g_id, 0)
+                        giocatori_db[g['nome']]["punti_giornate"][g_id] = current_pts + p_tot
             except: continue
 
     print("\nInvio dati a Firebase...")
@@ -117,6 +121,6 @@ def scraper_professionale():
             "punteggio_campionato": sum(d["punti_giornate"].values())
         }, merge=True)
     batch.commit()
-    print("FATTO.")
+    print("FINITO.")
 
 if __name__ == "__main__": scraper_professionale()
