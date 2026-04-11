@@ -10,16 +10,13 @@ import re
 def avvia_firebase():
     if firebase_admin._apps: return firestore.client()
     firebase_secret = os.environ.get("FIREBASE_KEY")
-    try:
-        if firebase_secret:
-            cred_dict = json.loads(firebase_secret)
-            cred = credentials.Certificate(cred_dict)
-        else:
-            cred = credentials.Certificate("chiave.json")
-        firebase_admin.initialize_app(cred)
-        return firestore.client()
-    except Exception as e:
-        print(f"Errore Firebase: {e}"); return None
+    if firebase_secret:
+        cred_dict = json.loads(firebase_secret)
+        cred = credentials.Certificate(cred_dict)
+    else:
+        cred = credentials.Certificate("chiave.json")
+    firebase_admin.initialize_app(cred)
+    return firestore.client()
 
 def calcola_bonus_squadra(p_fatti, p_subiti):
     bonus = 0.0
@@ -34,87 +31,83 @@ def scraper_professionale():
     db = avvia_firebase()
     if not db: return 
 
-    campionati = {
-        "A1": "39", "A2": "41", "B1": "42", "B2": "43", "FEM": "47"
-    }
-    
+    campionati = {"A1": "39", "A2": "41", "B1": "42", "B2": "43", "FEM": "47"}
     lista_femm = ["Federica Funnone", "Martina Lupo", "Sabrina Capitolo", "Arianna Vismara", "Sabrina Zanfretta", "Sara Sottolano", "Martina Bracesco", "Rossella De Blasio", "Carlotta Amodeo", "Federica Amorelli", "Elena Pasino", "Mara Ferraris", "Alice La Versa", "Noemi Castelluccio", "Chiara Gilardi"]
     giocatori_db = {}
-
+    
     for cat_nome, c_id in campionati.items():
         url = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={c_id}"
-        print(f"-> Analisi Campionato: {cat_nome}")
+        print(f"-> Analisi: {cat_nome}")
         try:
             r = requests.get(url)
             soup = BeautifulSoup(r.text, 'html.parser')
-        except:
-            continue
+        except: continue
         
-        # 1. Trova TUTTI i link ai referti della pagina (ignorando la struttura HTML)
         links = set()
         for a in soup.find_all('a', href=True):
             if 'route=match/result' in a['href']:
                 links.add(urllib.parse.urljoin("https://referto.plvhitball.it/", a['href']))
         
-        print(f"Trovate {len(links)} partite da analizzare.")
-        
         for l in links:
             try:
                 rp = requests.get(l)
                 sp = BeautifulSoup(rp.text, 'html.parser')
-                testo_pagina = sp.get_text(separator=" ")
                 
-                # Trova la giornata
-                match_g = re.search(r'Giornata[^\d]*(\d+)', testo_pagina, re.I)
+                h_titolo = sp.find(['h3', 'h4', 'h2'])
+                match_g = re.search(r'Giornata\s+(\d+)', h_titolo.get_text() if h_titolo else sp.get_text(), re.I)
                 g_id = match_g.group(1) if match_g else "1"
                 
-                # Trova tutte le righe HTML che contengono la scritta "x2" (i giocatori)
-                tags = sp.find_all(string=re.compile(r'x\s*2', re.I))
-                rows = []
-                for t in tags:
-                    p = t.find_parent(['li', 'tr', 'div'])
-                    if p and p not in rows:
-                        rows.append(p)
+                # 1. Troviamo TUTTI i potenziali giocatori esplorando l'intera pagina
+                player_nodes = sp.find_all(['li', 'tr', 'div'])
+                valid_nodes = []
                 
-                if not rows: continue
+                for node in player_nodes:
+                    # Sostituisce le icone con X per non perdere i moltiplicatori
+                    for i_tag in node.find_all(['i', 'span']):
+                        c = str(i_tag.get('class', [])).lower()
+                        if 'times' in c or 'close' in c: i_tag.replace_with(" X ")
+                    testo = node.get_text(separator=" ", strip=True).upper().replace('×', 'X').replace('*', 'X')
+                    
+                    # Se la riga ha la forma di un referto giocatore, la teniamo
+                    if re.search(r'X\s*2|X\s*3|AUTOHIT', testo):
+                        valid_nodes.append(node)
                 
-                # Le due squadre sono divise a metà nella pagina
-                half = len(rows) // 2
-                teamA_rows = rows[:half]
-                teamB_rows = rows[half:]
+                if not valid_nodes: continue
                 
-                def processa_team(team_rows):
-                    p_h = 0
-                    ah_s = 0
+                # 2. Raggruppiamoli nei loro contenitori (Team A e Team B)
+                containers = []
+                for node in valid_nodes:
+                    parent = node.find_parent(['ul', 'tbody', 'table'])
+                    if parent and parent not in containers:
+                        containers.append(parent)
+                
+                if len(containers) < 2: continue # Se non trova due squadre, salta
+                
+                # 3. Estrazione dati
+                def processa_team(parent_node):
+                    p_h, ah_s = 0, 0
                     dati = []
-                    for r in team_rows:
-                        testo = r.get_text(separator=" ", strip=True).upper()
+                    for n in parent_node.find_all(['li', 'tr']):
+                        testo = n.get_text(separator=" ", strip=True).upper().replace('×', 'X').replace('*', 'X')
+                        if not re.search(r'\d', testo): continue
                         
-                        # Estrazione Nome super-sicura: prende le lettere fino al primo numero o "Tot"
-                        nome_parts = []
-                        for s in r.stripped_strings:
-                            if re.match(r'^\d+$', s) or s.lower() in ['x2', 'x3', 'x', 'autohit', 'tot.', 'tot']:
-                                break
-                            if re.match(r'[A-Za-z]', s):
-                                nome_parts.append(s)
-                        nome = " ".join(nome_parts).strip()
-                        if not nome: continue
+                        nome = list(n.stripped_strings)[0] if list(n.stripped_strings) else ""
+                        if not nome or len(nome) < 3 or "TOTALE" in nome: continue
                         
-                        # Regex per i punti (gestisce spazi e puntini)
-                        h2 = sum(int(x) for x in re.findall(r'(\d+)\s*\.?\s*X\s*2', testo))
-                        h3 = sum(int(x) for x in re.findall(r'(\d+)\s*\.?\s*X\s*3', testo))
-                        ah = sum(int(x) for x in re.findall(r'(\d+)\s*\.?\s*X\s*AUTOHIT', testo))
+                        h2 = sum(int(x) for x in re.findall(r'(\d+)\s*X\s*2', testo))
+                        h3 = sum(int(x) for x in re.findall(r'(\d+)\s*X\s*3', testo))
+                        ah = sum(int(x) for x in re.findall(r'(\d+)\s*AUTOHIT', testo))
                         
-                        amm = len(r.find_all('i', class_=re.compile(r'warning')))
-                        esp = len(r.find_all('i', class_=re.compile(r'danger')))
+                        amm = len(n.find_all(['i', 'span'], class_=re.compile(r'warning', re.I)))
+                        esp = len(n.find_all(['i', 'span'], class_=re.compile(r'danger', re.I)))
                         
                         p_h += (h2 * 2) + (h3 * 3)
                         ah_s += ah
                         dati.append({'nome': nome, 'h2': h2, 'h3': h3, 'ah': ah, 'amm': amm, 'esp': esp})
                     return p_h, ah_s, dati
 
-                phA, ahA, gA = processa_team(teamA_rows)
-                phB, ahB, gB = processa_team(teamB_rows)
+                phA, ahA, gA = processa_team(containers[0])
+                phB, ahB, gB = processa_team(containers[1])
                 
                 scA, scB = phA + ahB, phB + ahA
                 bonA = calcola_bonus_squadra(scA, scB)
@@ -129,23 +122,18 @@ def scraper_professionale():
                         if g['nome'] not in giocatori_db:
                             giocatori_db[g['nome']] = {"punti_giornate": {}, "categoria": cat_nome}
                         giocatori_db[g['nome']]["punti_giornate"][g_id] = p_tot
-            except Exception as e:
-                print(f"Errore analisi partita {l}: {e}")
-                continue
+            except Exception as e: continue
 
-    print("\nInizio Salvataggio su Firebase...")
+    print("\nSalvataggio su Firebase in corso...")
     batch = db.batch()
-    
-    # SOVRASCRITTURA COMPLETA (Niente merge=True)
     for n, d in giocatori_db.items():
         d["punteggio_campionato"] = sum(d["punti_giornate"].values())
         d["prezzo"] = max(10, int(d["punteggio_campionato"] * 2))
         d["nome_reale"] = n
         d["nome_visualizzato"] = n
-        batch.set(db.collection("giocatori").document(n), d) # Cancella i vecchi errori
-        
+        batch.set(db.collection("giocatori").document(n), d) # Sovrascrittura pura per pulire vecchi errori
     batch.commit()
-    print("AGGIORNAMENTO FIREBASE COMPLETATO CON SUCCESSO!")
+    print("FINITO: Database Aggiornato con Successo!")
 
 if __name__ == "__main__": 
     scraper_professionale()
