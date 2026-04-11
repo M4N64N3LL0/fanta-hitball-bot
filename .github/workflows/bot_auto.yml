@@ -2,9 +2,10 @@ name: Aggiornamento Punti FantaHitball
 
 on:
   schedule:
-    # Si attiva ogni lunedì alle 08:00 UTC (9:00 italiane)
-    - cron: '0 8 * * 1'
-  workflow_dispatch: # Permette di farlo partire anche a mano quando vuoi
+    # Si attiva ogni ora al minuto 0, dalle 06:00 alle 22:00 UTC
+    # In Italia corrisponde a: ogni ora dalle 07:00 alle 23:00 (o 08:00-00:00)
+    - cron: '0 6-22 * * *'
+  workflow_dispatch: # Permette di avviarlo a mano se hai fretta
 
 jobs:
   build:
