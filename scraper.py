@@ -20,15 +20,13 @@ def avvia_firebase():
 
 def calcola_bonus_squadra(p_fatti, p_subiti):
     bonus = 0.0
-    # --- BONUS PUNTI SEGNATI ---
+    # Regole Ufficiali
     if p_fatti >= 76: bonus += 5.0
     elif 51 <= p_fatti <= 75: bonus += 2.0
     
-    # --- BONUS/MALUS PUNTI SUBITI ---
     if p_subiti <= 50: bonus += 5.0
     elif 51 <= p_subiti <= 75: bonus += 2.0
     elif p_subiti >= 101: bonus -= 5.0
-    
     return bonus
 
 def scraper_professionale():
@@ -41,7 +39,7 @@ def scraper_professionale():
     
     for cat_nome, c_id in campionati.items():
         url = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={c_id}"
-        print(f"\n-> Analisi Campionato: {cat_nome}")
+        print(f"\n-> Analisi {cat_nome}")
         try:
             r = requests.get(url)
             soup = BeautifulSoup(r.text, 'html.parser')
@@ -52,11 +50,7 @@ def scraper_professionale():
             if 'route=match/result' in a['href']:
                 link = urllib.parse.urljoin("https://referto.plvhitball.it/", a['href'])
                 nodo_testo = a.find_previous(string=re.compile(r'giornata\s*\d+|\d+[^\w]*giornata', re.I))
-                g_id = "1"
-                if nodo_testo:
-                    testo = str(nodo_testo).lower()
-                    match_g = re.search(r'giornata\s*(\d+)|(\d+)[^\w]*giornata', testo)
-                    if match_g: g_id = match_g.group(1) or match_g.group(2)
+                g_id = str(re.search(r'\d+', str(nodo_testo)).group()) if nodo_testo else "1"
                 mappa_partite[link] = g_id
 
         for l, g_id in mappa_partite.items():
@@ -104,37 +98,25 @@ def scraper_professionale():
                 for lista, b_t in [(gA, bonA), (gB, bonB)]:
                     for g in lista:
                         molt = 2.0 if g['nome'] in lista_femm else 1.0
-                        # Calcolo basato su Hit, Autohit(-1), Ammonizione(-10), Espulsione(-20)
-                        p_indiv = ((g['h2'] + g['h3']) * molt) - g['ah'] - (g['amm'] * 10) - (g['esp'] * 20)
-                        p_tot = p_indiv + b_t
-                        
+                        # Punteggio: (Hit * Molt) - Autohit - Ammonizione(-10) - Espulsione(-20) + Bonus Squadra
+                        p_tot = (((g['h2'] + g['h3']) * molt) - g['ah'] - (g['amm'] * 10) - (g['esp'] * 20)) + b_t
                         if g['nome'] not in giocatori_db:
                             giocatori_db[g['nome']] = {"punti_giornate": {}, "categoria": cat_nome}
-                        giocatori_db[g['nome']]["punti_giornate"][str(g_id)] = giocatori_db[g['nome']]["punti_giornate"].get(str(g_id), 0) + p_tot
+                        # Sovrascrive per evitare doppioni nella stessa giornata
+                        giocatori_db[g['nome']]["punti_giornate"][g_id] = p_tot
             except: continue
 
-    print("\nSalvataggio su Firebase (Reset Punti e Protezione Prezzi)...")
+    print("\nInvio dati a Firebase...")
     batch = db.batch()
-    count = 0
     for n, d in giocatori_db.items():
-        # Calcoliamo il totale e formattiamo i dati
-        punti_totali = sum(d["punti_giornate"].values())
-        
-        # Aggiorniamo cancellando i vecchi punti giornate per evitare residui
-        aggiornamento = {
-            "punteggio_campionato": punti_totali,
-            "punti_giornate": d["punti_giornate"],
+        doc_ref = db.collection("giocatori").document(n)
+        batch.set(doc_ref, {
             "nome_reale": n,
-            "categoria": d["categoria"]
-        }
-        # merge=True mantiene il prezzo ma sovrascrive punti_giornate
-        batch.set(db.collection("giocatori").document(n), aggiornamento, merge=True)
-        count += 1
-        if count == 450:
-            batch.commit()
-            batch = db.batch()
-            count = 0
-    if count > 0: batch.commit()
-    print(f"FINITO: Ricalcolati {len(giocatori_db)} giocatori con i nuovi criteri.")
+            "categoria": d["categoria"],
+            "punti_giornate": d["punti_giornate"],
+            "punteggio_campionato": sum(d["punti_giornate"].values())
+        }, merge=True)
+    batch.commit()
+    print("FATTO.")
 
 if __name__ == "__main__": scraper_professionale()
