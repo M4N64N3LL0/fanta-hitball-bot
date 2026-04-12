@@ -5,168 +5,177 @@ from firebase_admin import credentials, firestore
 import urllib.parse
 import os
 import json
-import re
-
-# ==========================================
-# CONFIGURAZIONE E LISTA QUOTE ROSA
-# ==========================================
-QUOTE_ROSA = {
-    "FEDERICA FUNNONE": "A1", 
-    "MARTINA LUPO": "A1",
-    "SABRINA CAPITOLO": "A2",
-    "ARIANNA VISMARA": "B1", 
-    "SABRINA ZANFRETTA": "B1", 
-    "SARA SOTTOLANO": "B1", 
-    "MARTINA BRACESCO": "B1", 
-    "ROSSELLA DE BLASIO": "B1",
-    "CARLOTTA AMODEO": "B2", 
-    "FEDERICA AMORELLI": "B2", 
-    "ELENA PASINO": "B2", 
-    "MARA FERRARIS": "B2", 
-    "ALICE LA VERSA": "B2", 
-    "NOEMI CASTELLUCCIO": "B2", 
-    "CHIARA GILARDI": "B2"
-}
 
 def avvia_firebase():
-    if firebase_admin._apps: return firestore.client()
+    """Inizializza Firebase in modo sicuro (Locale o Server)"""
+    if firebase_admin._apps:
+        return firestore.client()
+        
     firebase_secret = os.environ.get("FIREBASE_KEY")
-    if firebase_secret:
-        cred = credentials.Certificate(json.loads(firebase_secret))
-    else:
-        cred = credentials.Certificate("chiave.json")
-    firebase_admin.initialize_app(cred)
-    return firestore.client()
-
-def calcola_bonus_squadra(p_fatti, p_subiti):
-    bonus = 0.0
-    # Bonus Punti Segnati
-    if p_fatti >= 76: bonus += 5.0
-    elif 51 <= p_fatti <= 75: bonus += 2.0
     
-    # Bonus/Malus Punti Subiti
-    if p_subiti <= 50: bonus += 5.0
-    elif 51 <= p_subiti <= 75: bonus += 2.0
-    elif p_subiti >= 101: bonus -= 5.0
+    try:
+        if firebase_secret:
+            cred_dict = json.loads(firebase_secret)
+            cred = credentials.Certificate(cred_dict)
+            print("Avvio in modalità SERVER (GitHub Actions) - OK")
+        else:
+            cred = credentials.Certificate("chiave.json")
+            print("Avvio in modalità LOCALE (VS Code) - OK")
+            
+        firebase_admin.initialize_app(cred)
+        return firestore.client()
+    except Exception as e:
+        print(f"ERRORE CRITICO nell'avvio di Firebase: {e}")
+        return None
+
+def calcola_bonus_squadra(punti_fatti, punti_subiti):
+    bonus = 0.0
+    # Prestazione Offensiva
+    if 51 <= punti_fatti <= 75:
+        bonus += 2.0
+    elif punti_fatti >= 76:
+        bonus += 3.0
+        
+    # Prestazione Difensiva
+    if punti_subiti <= 50:
+        bonus += 5.0
+    elif 51 <= punti_subiti <= 75:
+        bonus += 2.0
+    elif punti_subiti >= 101:
+        bonus -= 5.0
+        
     return bonus
+
+def estrai_dati_squadra(team_list):
+    h2_tot, h3_tot, ah_tot = 0, 0, 0
+    giocatori_html = team_list.find_all('li', class_='list-group-item')
+    
+    for blocco in giocatori_html:
+        testi = list(blocco.stripped_strings)
+        h2_tot += sum([int(t.replace('x2','').strip() or 0) for t in testi if 'x2' in t])
+        h3_tot += sum([int(t.replace('x3','').strip() or 0) for t in testi if 'x3' in t])
+        ah_tot += sum([int(t.replace('AUTOHIT','').replace('x','').strip() or 0) for t in testi if 'AUTOHIT' in t])
+        
+    punti_reali_fatti = (h2_tot * 2) + (h3_tot * 3)
+    return punti_reali_fatti, ah_tot, giocatori_html
 
 def scraper_professionale():
     db = avvia_firebase()
-    
-    # 1. Caricamento White List dal file JSON (deve essere nella stessa cartella)
-    try:
-        with open("database_giocatori.json", "r", encoding="utf-8") as f:
-            lista_ufficiale = json.load(f)
-            nomi_ammessi = {g['nome_reale'].upper(): g for g in lista_ufficiale}
-            print(f"White List caricata: {len(nomi_ammessi)} nomi ammessi.")
-    except Exception as e:
-        print(f"ERRORE caricamento database_giocatori.json: {e}")
-        return
+    if not db:
+        return 
 
-    # 2. Campionati da scansionare (ESCLUSO IL FEMMINILE ID 47)
-    campionati = {"A1": "39", "A2": "41", "B1": "42", "B2": "43"}
-    giocatori_db = {}
-    
-    for cat_nome, c_id in campionati.items():
-        url = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={c_id}"
-        print(f"\n--- Analisi Campionato: {cat_nome} ---")
-        try:
-            r = requests.get(url, timeout=10)
-            soup = BeautifulSoup(r.text, 'html.parser')
+    campionati = {
+        "A1": "https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id=39",
+        "A2": "https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id=41",
+        "B1": "https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id=42",
+        "B2": "https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id=43",
+        "FEMMINILE": "https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id=47"
+    }
+
+    lista_femm = ["Federica Funnone", "Martina Lupo", "Sabrina Capitolo", "Arianna Vismara", "Sabrina Zanfretta", "Sara Sottolano", "Martina Bracesco", "Rossella De Blasio", "Carlotta Amodeo", "Federica Amorelli", "Elena Pasino", "Mara Ferraris", "Alice La Versa", "Noemi Castelluccio", "Chiara Gilardi"]
+
+    giocatori_data = {}
+    print("=== AVVIO MEGA-BOT (REGOLAMENTO COMPLETO + FOTO) ===")
+
+    for cat_nome, url in campionati.items():
+        print(f"Esplorando {cat_nome}...")
+        r = requests.get(url)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        links = list(set([urllib.parse.urljoin("https://referto.plvhitball.it/", a['href']) for a in soup.find_all('a', href=True) if 'route=match/result' in a['href']]))
+        
+        for l in links:
+            giornata_id = "1" 
             
-            mappa_partite = {}
-            for a in soup.find_all('a', href=True):
-                if 'route=match/result' in a['href']:
-                    link = urllib.parse.urljoin("https://referto.plvhitball.it/", a['href'])
-                    nodo_testo = a.find_previous(string=re.compile(r'giornata\s*\d+|\d+[^\w]*giornata', re.I))
-                    g_id = str(re.search(r'\d+', str(nodo_testo)).group()) if nodo_testo else "1"
-                    mappa_partite[link] = g_id
+            rp = requests.get(l)
+            sp = BeautifulSoup(rp.text, 'html.parser')
 
-            for link_partita, giornata_id in mappa_partite.items():
-                try:
-                    rp = requests.get(link_partita, timeout=10)
-                    sp = BeautifulSoup(rp.text, 'html.parser')
-                    
-                    # Individua tabelle referto
-                    valid_nodes = []
-                    for node in sp.find_all(['li', 'tr']):
-                        for i_tag in node.find_all(['i', 'span']):
-                            if 'times' in str(i_tag.get('class', [])).lower(): i_tag.replace_with(" X ")
-                        testo = node.get_text(separator=" ", strip=True).upper().replace('×', 'X').replace('*', 'X')
-                        if re.search(r'X\s*2|X\s*3|AUTOHIT', testo): valid_nodes.append(node)
-                    
-                    containers = []
-                    for v in valid_nodes:
-                        p = v.find_parent(['ul', 'tbody', 'table'])
-                        if p and p not in containers: containers.append(p)
-                    
-                    if len(containers) < 2: continue
+            team_lists = sp.find_all('ul', class_='list-group')
+            
+            if len(team_lists) >= 2:
+                # SQUADRA A
+                punti_A_hits, ah_A, giocatori_A = estrai_dati_squadra(team_lists[0])
+                # SQUADRA B
+                punti_B_hits, ah_B, giocatori_B = estrai_dati_squadra(team_lists[1])
+                
+                score_A = punti_A_hits + ah_B
+                score_B = punti_B_hits + ah_A
+                
+                # --- LOGICA SCONFITTA A TAVOLINO INTELLIGENTE ---
+                tavolino_A = 0.0
+                tavolino_B = 0.0
+                if "tavolino" in sp.text.lower():
+                    if punti_A_hits == 0: tavolino_A = -20.0
+                    if punti_B_hits == 0: tavolino_B = -20.0
 
-                    def processa_team(parent_node):
-                        p_h, ah_s, dati = 0, 0, []
-                        for n in parent_node.find_all(['li', 'tr']):
-                            testo_raw = n.get_text(separator=" ", strip=True).upper().replace('×', 'X').replace('*', 'X')
-                            if not re.search(r'\d', testo_raw): continue
-                            strings = list(n.stripped_strings)
-                            nome = strings[0] if strings else ""
-                            if not nome or len(nome) < 3 or "TOTALE" in nome: continue
-                            
-                            # FILTRO WHITE LIST
-                            if nome.upper() not in nomi_ammessi: continue
-                            
-                            h2 = sum(int(x) for x in re.findall(r'(\d+)\s*X\s*2', testo_raw))
-                            h3 = sum(int(x) for x in re.findall(r'(\d+)\s*X\s*3', testo_raw))
-                            ah = sum(int(x) for x in re.findall(r'(\d+)\s*AUTOHIT', testo_raw))
-                            amm = len(n.find_all(['i', 'span'], class_=re.compile(r'warning', re.I)))
-                            esp = len(n.find_all(['i', 'span'], class_=re.compile(r'danger', re.I)))
-                            p_h += (h2 * 2) + (h3 * 3)
-                            ah_s += ah
-                            dati.append({'nome': nome, 'h2': h2, 'h3': h3, 'ah': ah, 'amm': amm, 'esp': esp})
-                        return p_h, ah_s, dati
+                bonus_squadra_A = calcola_bonus_squadra(score_A, score_B)
+                bonus_squadra_B = calcola_bonus_squadra(score_B, score_A)
+                
+                squadre_da_processare = [
+                    (giocatori_A, bonus_squadra_A, tavolino_A), 
+                    (giocatori_B, bonus_squadra_B, tavolino_B)
+                ]
+                
+                for giocatori_html, bonus_team, malus_tavolino in squadre_da_processare:
+                    for blocco in giocatori_html:
+                        testi = list(blocco.stripped_strings)
+                        if not testi: continue
+                        nome = testi[0]
+                        
+                        # --- NUOVA SEZIONE: ESTRAZIONE FOTO ---
+                        foto_url = None
+                        img_tag = blocco.find('img')
+                        if img_tag and 'src' in img_tag.attrs:
+                            src_link = img_tag['src']
+                            # Verifichiamo che non sia un'icona di sistema o un placeholder generico di OpenCart
+                            if "placeholder" not in src_link.lower() and "no_image" not in src_link.lower():
+                                if src_link.startswith('/'):
+                                    foto_url = "https://referto.plvhitball.it" + src_link
+                                elif src_link.startswith('http'):
+                                    foto_url = src_link
+                                else:
+                                    foto_url = "https://referto.plvhitball.it/" + src_link
+                        # -------------------------------------
+                        
+                        h2 = sum([int(t.replace('x2','').strip() or 0) for t in testi if 'x2' in t])
+                        h3 = sum([int(t.replace('x3','').strip() or 0) for t in testi if 'x3' in t])
+                        ah = sum([int(t.replace('AUTOHIT','').replace('x','').strip() or 0) for t in testi if 'AUTOHIT' in t])
+                        amm = len(blocco.find_all('i', class_='text-warning'))
+                        esp = len(blocco.find_all('i', class_='text-danger'))
+                        
+                        moltiplicatore_hit = 2.0 if nome in lista_femm else 1.0
+                        
+                        # CALCOLO FINALE DEL SINGOLO GIOCATORE
+                        punti_base = ((h2 + h3) * moltiplicatore_hit) - ah - (amm * 10) - (esp * 20)
+                        punti_totali = punti_base + bonus_team + malus_tavolino
 
-                    phA, ahA, gA = processa_team(containers[0])
-                    phB, ahB, gB = processa_team(containers[1])
-                    scA, scB = phA + ahB, phB + ahA
-                    bonA, bonB = calcola_bonus_squadra(scA, scB), calcola_bonus_squadra(scB, scA)
+                        if nome not in giocatori_data:
+                            # Se è un nuovo giocatore, salviamo anche la foto (se l'abbiamo trovata)
+                            giocatori_data[nome] = {
+                                "punti_giornate": {},
+                                "nome_reale": nome
+                            }
+                            if foto_url:
+                                giocatori_data[nome]["foto_url"] = foto_url
+                        elif foto_url and "foto_url" not in giocatori_data[nome]:
+                            # Se l'avevamo già incontrato ma senza foto, e ora l'abbiamo trovata, l'aggiungiamo
+                            giocatori_data[nome]["foto_url"] = foto_url
+                        
+                        giocatori_data[nome]["punti_giornate"][giornata_id] = punti_totali
 
-                    for lista, bonus_squadra in [(gA, bonA), (gB, bonB)]:
-                        for g in lista:
-                            nome_u = g['nome'].upper()
-                            is_fem = nome_u in QUOTE_ROSA
-                            
-                            # Forza categoria FEM per le ragazze, altrimenti usa quella della white list
-                            categoria_fanta = "FEM" if is_fem else nomi_ammessi[nome_u]['categoria']
-                            molt = 2.0 if is_fem else 1.0
-                            
-                            # Calcolo: (Hit * Molt) - Autohit - Malus Ammonizione/Espulsione + Bonus Squadra
-                            p_tot = (((g['h2'] + g['h3']) * molt) - g['ah'] - (g['amm'] * 10) - (g['esp'] * 20)) + bonus_squadra
-                            
-                            if g['nome'] not in giocatori_db:
-                                giocatori_db[g['nome']] = {"punti_giornate": {}, "categoria": categoria_fanta}
-                            
-                            # Somma algebrica per doppie partite nella stessa giornata
-                            giocatori_db[g['nome']]["punti_giornate"][giornata_id] = giocatori_db[g['nome']]["punti_giornate"].get(giornata_id, 0) + p_tot
-                except Exception as e:
-                    print(f"Errore partita {link_partita}: {e}")
-                    continue
-        except Exception as e:
-            print(f"Errore campionato {cat_nome}: {e}")
-
-    # 3. Invio Batch a Firebase (Senza cancellare i prezzi)
-    print(f"\nSalvataggio di {len(giocatori_db)} giocatori su Firebase...")
+    print("\nSincronizzazione Cloud in corso...")
     batch = db.batch()
-    for nome, info in giocatori_db.items():
+    contatore = 0
+    for nome, info in giocatori_data.items():
         doc_ref = db.collection("giocatori").document(nome)
-        aggiornamento = {
-            "nome_reale": nome,
-            "categoria": info["categoria"],
-            "punti_giornate": info["punti_giornate"],
-            "punteggio_campionato": sum(info["punti_giornate"].values())
-        }
-        batch.set(doc_ref, aggiornamento, merge=True)
-    
+        # Salviamo su Firestore sia i punti che (se presente) l'URL della foto
+        batch.set(doc_ref, info, merge=True)
+        contatore += 1
+        if contatore % 450 == 0:
+            batch.commit()
+            batch = db.batch()
+            
     batch.commit()
-    print("Operazione completata con successo.")
+    print("=== DATABASE AGGIORNATO CON SUCCESSO! ===")
 
 if __name__ == "__main__":
     scraper_professionale()
