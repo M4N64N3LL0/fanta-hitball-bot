@@ -1,11 +1,15 @@
 import os
 import json
 import requests
+import re
 from bs4 import BeautifulSoup
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# --- CONFIGURAZIONE ---
+# --- 1. CONFIGURAZIONE ---
+# ID esatti dei campionati PLV (A1, A2, B1, B2)
+ID_CAMPIONATI = [39, 41, 42, 43] 
+
 QUOTE_ROSA_FEM = [
     "FEDERICA FUNNONE", "MARTINA LUPO", "SABRINA CAPITOLO", "ARIANNA VISMARA", 
     "SABRINA ZANFRETTA", "SARA SOTTOLANO", "MARTINA BRACESCO", "ROSSELLA DE BLASIO", 
@@ -17,97 +21,141 @@ def inizializza_firebase():
     if not firebase_admin._apps:
         cred_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         if cred_json:
-            # GitHub Actions
             config_dict = json.loads(cred_json)
             cred = credentials.Certificate(config_dict)
         else:
-            # Locale
             cred = credentials.Certificate("serviceAccountKey.json")
         firebase_admin.initialize_app(cred)
     return firestore.client()
 
-def calcola_punteggio_fanta(nome, hits, fatti, subiti, giallo, rosso, tavolino):
-    # 1. Punti base: 1 hit = 1pt | FEM = 2pt
-    is_fem = nome.upper().strip() in QUOTE_ROSA_FEM
+# --- 2. LOGICA CALCOLO PUNTI E REGOLE ---
+def calcola_punteggio_fanta(nome, hits, fatti, subiti, giallo, rosso, tavolino, db):
+    nome_up = nome.upper().strip()
+    
+    # Riconoscimento FEM (Lista manuale + Controllo Firebase)
+    is_fem = nome_up in QUOTE_ROSA_FEM
+    if not is_fem:
+        doc = db.collection('giocatori').document(nome_up).get()
+        if doc.exists and doc.to_dict().get('categoria') == "FEM":
+            is_fem = True
+
+    # Punti base
     punti_base = (hits * 2) if is_fem else hits
     
-    # 2. Bonus Squadra Segnati
-    bonus_fatti = 0
-    if fatti >= 76: bonus_fatti = 5
-    elif fatti >= 51: bonus_fatti = 2
+    # Bonus Squadra Segnati
+    bonus_fatti = 5 if fatti >= 76 else (2 if fatti >= 51 else 0)
     
-    # 3. Bonus/Malus Squadra Subiti
-    bonus_subiti = 0
+    # Bonus/Malus Squadra Subiti
     if subiti <= 50: bonus_subiti = 5
     elif subiti <= 75: bonus_subiti = 2
     elif subiti >= 101: bonus_subiti = -5
+    else: bonus_subiti = 0
     
-    # 4. Malus Disciplinari (Dall'ispezione quadratini)
-    malus_giallo = -10 if giallo else 0
-    malus_rosso = -20 if rosso else 0
-    malus_tavolino = -20 if tavolino else 0
+    # Malus Disciplinari
+    malus = (-10 if giallo else 0) + (-20 if rosso else 0) + (-20 if tavolino else 0)
     
-    return punti_base + bonus_fatti + bonus_subiti + malus_giallo + malus_rosso + malus_tavolino
+    return punti_base + bonus_fatti + bonus_subiti + malus
 
-def analizza_partita(url, giornata, tavolino_casa=False, tavolino_trasferta=False):
-    db = inizializza_firebase()
+# --- 3. CRAWLER E ANALISI REFERTI ---
+def recupera_e_analizza(db):
+    for camp_id in ID_CAMPIONATI:
+        url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
+        print(f"\n{'='*40}")
+        print(f" >>> SCANSIONE CAMPIONATO ID: {camp_id}")
+        print(f"{'='*40}")
+        
+        try:
+            res = requests.get(url_camp, timeout=15)
+            res.raise_for_status()
+            soup = BeautifulSoup(res.text, 'html.parser')
+            
+            giornata_attuale = 1
+            referti_trovati = 0
+            
+            # Scorre la pagina dall'alto verso il basso per associare le giornate ai referti
+            for element in soup.find_all(['h1', 'h2', 'h3', 'h4', 'div', 'a']):
+                testo = element.get_text(strip=True)
+                
+                # Rileva cambio giornata (es. "Giornata 1")
+                m = re.search(r'Giornata\s+(\d+)', testo, re.IGNORECASE)
+                if m and len(testo) < 30:
+                    giornata_attuale = int(m.group(1))
+                
+                # Rileva link referto (Bottone azzurro)
+                if element.name == 'a' and 'href' in element.attrs:
+                    href = element['href']
+                    if 'route=referto/referto&referto_id=' in href:
+                        url_ref = "https://referto.plvhitball.it" + href if href.startswith('/') else href
+                        
+                        referti_trovati += 1
+                        processa_referto(url_ref, giornata_attuale, db)
+                        
+            print(f"Completata analisi di {referti_trovati} referti per il Campionato {camp_id}.")
+                    
+        except Exception as e:
+            print(f"Errore critico durante la scansione del campionato {camp_id}: {e}")
+
+def processa_referto(url, giornata, db):
     try:
         res = requests.get(url, timeout=10)
-        res.raise_for_status()
-    except Exception as e:
-        print(f"Errore connessione: {e}")
-        return
-
-    soup = BeautifulSoup(res.text, 'html.parser')
-    tabelle = soup.find_all('table', class_='table-condensed')
-
-    if len(tabelle) < 2:
-        print("Errore: Non ho trovato le due tabelle delle squadre.")
-        return
-
-    # Estrazione Totali (Ultima riga delle tabelle)
-    try:
-        tot_casa = int(tabelle[0].find_all('tr')[-1].find_all('td')[2].text.strip())
-        tot_trasferta = int(tabelle[1].find_all('tr')[-1].find_all('td')[2].text.strip())
-    except (IndexError, ValueError) as e:
-        print(f"Errore estrazione totali: {e}. Il referto potrebbe essere incompleto.")
-        return
-
-    print(f"--- ANALISI GIORNATA {giornata} ---")
-    print(f"Risultato: {tot_casa} - {tot_trasferta}")
-
-    for i, tabella in enumerate(tabelle[:2]):
-        is_casa = (i == 0)
-        fatti = tot_casa if is_casa else tot_trasferta
-        subiti = tot_trasferta if is_casa else tot_casa
-        tavolino = tavolino_casa if is_casa else tavolino_trasferta
+        soup = BeautifulSoup(res.text, 'html.parser')
+        tabelle = soup.find_all('table', class_='table-condensed')
         
-        righe = tabella.find_all('tr')[1:-1] # Salto header e riga totali
-        for riga in righe:
-            cols = riga.find_all('td')
-            if len(cols) < 3: continue
+        # Se non ci sono tabelle, la partita è SV (Senza Voto) o non giocata
+        if len(tabelle) < 2: 
+            return 
+
+        # Estrazione Totali squadra (Ultima riga delle tabelle)
+        try:
+            tot_casa = int(tabelle[0].find_all('tr')[-1].find_all('td')[2].text.strip())
+            tot_trasf = int(tabelle[1].find_all('tr')[-1].find_all('td')[2].text.strip())
+        except (IndexError, ValueError):
+            # Se la riga dei totali è vuota o sfasata, saltiamo
+            return
+
+        print(f"\n[G{giornata}] Analizzo referto: {tot_casa} - {tot_trasf}")
+
+        for i, tabella in enumerate(tabelle[:2]):
+            fatti = tot_casa if i == 0 else tot_trasf
+            subiti = tot_trasf if i == 0 else tot_casa
             
-            nome = cols[1].text.strip().upper()
-            try:
-                hits = int(cols[2].text.strip())
-            except: continue
+            # Analisi giocatori (saltando header e totali)
+            for riga in tabella.find_all('tr')[1:-1]:
+                cols = riga.find_all('td')
+                if len(cols) < 3: continue
+                
+                nome = cols[1].text.strip().upper()
+                try: 
+                    hits = int(cols[2].text.strip())
+                except ValueError: 
+                    continue
 
-            # Rilevamento Quadratini (Cartellini)
-            # Cerco l'icona con classe text-warning (giallo) o text-danger (rosso)
-            giallo = riga.find('i', class_='text-warning') is not None
-            rosso = riga.find('i', class_='text-danger') is not None
+                # Rilevamento Cartellini
+                giallo = riga.find('i', class_='text-warning') is not None
+                rosso = riga.find('i', class_='text-danger') is not None
 
-            punti_finali = calcola_punteggio_fanta(nome, hits, fatti, subiti, giallo, rosso, tavolino)
+                # Calcolo punteggio FantaHitball
+                voto = calcola_punteggio_fanta(nome, hits, fatti, subiti, giallo, rosso, False, db)
 
-            # Invio a Firebase
-            db.collection('giocatori').document(nome).set({
-                'punti_giornate': { str(giornata): punti_finali }
-            }, merge=True)
-            
-            print(f"Aggiornato {nome}: {punti_finali} pt (Giallo: {giallo}, Rosso: {rosso})")
+                # Aggiornamento su Firebase
+                db.collection('giocatori').document(nome).set({
+                    'punti_giornate': { str(giornata): voto }
+                }, merge=True)
+                
+                cartellini_log = " [G]" if giallo else (" [R]" if rosso else "")
+                print(f"  -> {nome}: {voto} pt{cartellini_log}")
 
+    except requests.exceptions.RequestException as e:
+        print(f"Errore di connessione al referto {url}: {e}")
+    except Exception as e:
+        print(f"Errore inaspettato sul referto {url}: {e}")
+
+# --- 4. ESECUZIONE MAIN ---
 if __name__ == "__main__":
-    # URL di esempio e Giornata
-    URL_MERCATO = "INSERISCI_URL_QUI"
-    GIORNATA_ATTUALE = 1
-    analizza_partita(URL_MERCATO, GIORNATA_ATTUALE)
+    print("Avvio FantaHitball Bot...")
+    db_firestore = inizializza_firebase()
+    
+    # Fa partire l'analisi di tutti i campionati
+    recupera_e_analizza(db_firestore)
+    
+    print("\n=== AGGIORNAMENTO DI TUTTI I CAMPIONATI COMPLETATO ===")
