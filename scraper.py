@@ -7,12 +7,32 @@ import os
 import json
 import re
 
+# ==========================================
+# CONFIGURAZIONE E LISTA QUOTE ROSA
+# ==========================================
+QUOTE_ROSA = {
+    "FEDERICA FUNNONE": "A1", 
+    "MARTINA LUPO": "A1",
+    "SABRINA CAPITOLO": "A2",
+    "ARIANNA VISMARA": "B1", 
+    "SABRINA ZANFRETTA": "B1", 
+    "SARA SOTTOLANO": "B1", 
+    "MARTINA BRACESCO": "B1", 
+    "ROSSELLA DE BLASIO": "B1",
+    "CARLOTTA AMODEO": "B2", 
+    "FEDERICA AMORELLI": "B2", 
+    "ELENA PASINO": "B2", 
+    "MARA FERRARIS": "B2", 
+    "ALICE LA VERSA": "B2", 
+    "NOEMI CASTELLUCCIO": "B2", 
+    "CHIARA GILARDI": "B2"
+}
+
 def avvia_firebase():
     if firebase_admin._apps: return firestore.client()
     firebase_secret = os.environ.get("FIREBASE_KEY")
     if firebase_secret:
-        cred_dict = json.loads(firebase_secret)
-        cred = credentials.Certificate(cred_dict)
+        cred = credentials.Certificate(json.loads(firebase_secret))
     else:
         cred = credentials.Certificate("chiave.json")
     firebase_admin.initialize_app(cred)
@@ -20,8 +40,11 @@ def avvia_firebase():
 
 def calcola_bonus_squadra(p_fatti, p_subiti):
     bonus = 0.0
+    # Bonus Punti Segnati
     if p_fatti >= 76: bonus += 5.0
     elif 51 <= p_fatti <= 75: bonus += 2.0
+    
+    # Bonus/Malus Punti Subiti
     if p_subiti <= 50: bonus += 5.0
     elif 51 <= p_subiti <= 75: bonus += 2.0
     elif p_subiti >= 101: bonus -= 5.0
@@ -29,106 +52,121 @@ def calcola_bonus_squadra(p_fatti, p_subiti):
 
 def scraper_professionale():
     db = avvia_firebase()
-    if not db: return 
+    
+    # 1. Caricamento White List dal file JSON (deve essere nella stessa cartella)
+    try:
+        with open("database_giocatori.json", "r", encoding="utf-8") as f:
+            lista_ufficiale = json.load(f)
+            nomi_ammessi = {g['nome_reale'].upper(): g for g in lista_ufficiale}
+            print(f"White List caricata: {len(nomi_ammessi)} nomi ammessi.")
+    except Exception as e:
+        print(f"ERRORE caricamento database_giocatori.json: {e}")
+        return
 
-    # 1. Carichiamo la "White List" dei nomi dal tuo file JSON
-    with open("database_giocatori.json", "r", encoding="utf-8") as f:
-        lista_ufficiale = json.load(f)
-        nomi_ammessi = {g['nome_reale'].upper(): g for g in lista_ufficiale}
-
-    # 2. Rimosso il campionato FEM ("47") dalla scansione
+    # 2. Campionati da scansionare (ESCLUSO IL FEMMINILE ID 47)
     campionati = {"A1": "39", "A2": "41", "B1": "42", "B2": "43"}
-    
-    # Lista femminile per raddoppio punti (rimane per il calcolo nel misto)
-    lista_femm = [g['nome_reale'] for g in lista_ufficiale if g.get('categoria') == 'FEM']
-    
     giocatori_db = {}
     
     for cat_nome, c_id in campionati.items():
         url = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={c_id}"
-        print(f"Analisi {cat_nome}...")
+        print(f"\n--- Analisi Campionato: {cat_nome} ---")
         try:
-            r = requests.get(url)
+            r = requests.get(url, timeout=10)
             soup = BeautifulSoup(r.text, 'html.parser')
-        except: continue
-        
-        mappa_partite = {}
-        for a in soup.find_all('a', href=True):
-            if 'route=match/result' in a['href']:
-                link = urllib.parse.urljoin("https://referto.plvhitball.it/", a['href'])
-                nodo_testo = a.find_previous(string=re.compile(r'giornata\s*\d+|\d+[^\w]*giornata', re.I))
-                g_id = str(re.search(r'\d+', str(nodo_testo)).group()) if nodo_testo else "1"
-                mappa_partite[link] = g_id
+            
+            mappa_partite = {}
+            for a in soup.find_all('a', href=True):
+                if 'route=match/result' in a['href']:
+                    link = urllib.parse.urljoin("https://referto.plvhitball.it/", a['href'])
+                    nodo_testo = a.find_previous(string=re.compile(r'giornata\s*\d+|\d+[^\w]*giornata', re.I))
+                    g_id = str(re.search(r'\d+', str(nodo_testo)).group()) if nodo_testo else "1"
+                    mappa_partite[link] = g_id
 
-        for l, g_id in mappa_partite.items():
-            try:
-                rp = requests.get(l)
-                sp = BeautifulSoup(rp.text, 'html.parser')
-                valid_nodes = []
-                for node in sp.find_all(['li', 'tr']):
-                    for i_tag in node.find_all(['i', 'span']):
-                        if 'times' in str(i_tag.get('class', [])).lower(): i_tag.replace_with(" X ")
-                    testo_nodo = node.get_text(separator=" ", strip=True).upper().replace('×', 'X').replace('*', 'X')
-                    if re.search(r'X\s*2|X\s*3|AUTOHIT', testo_nodo): valid_nodes.append(node)
-                
-                if not valid_nodes: continue
-                containers = []
-                for node in valid_nodes:
-                    parent = node.find_parent(['ul', 'tbody', 'table'])
-                    if parent and parent not in containers: containers.append(parent)
-                
-                if len(containers) < 2: continue
-                
-                def processa_team(parent_node):
-                    p_h, ah_s, dati = 0, 0, []
-                    for n in parent_node.find_all(['li', 'tr']):
-                        testo = n.get_text(separator=" ", strip=True).upper().replace('×', 'X').replace('*', 'X')
-                        if not re.search(r'\d', testo): continue
-                        nome = list(n.stripped_strings)[0] if list(n.stripped_strings) else ""
-                        if not nome or len(nome) < 3 or "TOTALE" in nome: continue
-                        
-                        # --- FILTRO NOMI: Se non è nel tuo DOCX, lo scartiamo ---
-                        if nome.upper() not in nomi_ammessi: continue
-                        
-                        h2 = sum(int(x) for x in re.findall(r'(\d+)\s*X\s*2', testo))
-                        h3 = sum(int(x) for x in re.findall(r'(\d+)\s*X\s*3', testo))
-                        ah = sum(int(x) for x in re.findall(r'(\d+)\s*AUTOHIT', testo))
-                        amm = len(n.find_all(['i', 'span'], class_=re.compile(r'warning', re.I)))
-                        esp = len(n.find_all(['i', 'span'], class_=re.compile(r'danger', re.I)))
-                        p_h += (h2 * 2) + (h3 * 3)
-                        ah_s += ah
-                        dati.append({'nome': nome, 'h2': h2, 'h3': h3, 'ah': ah, 'amm': amm, 'esp': esp})
-                    return p_h, ah_s, dati
+            for link_partita, giornata_id in mappa_partite.items():
+                try:
+                    rp = requests.get(link_partita, timeout=10)
+                    sp = BeautifulSoup(rp.text, 'html.parser')
+                    
+                    # Individua tabelle referto
+                    valid_nodes = []
+                    for node in sp.find_all(['li', 'tr']):
+                        for i_tag in node.find_all(['i', 'span']):
+                            if 'times' in str(i_tag.get('class', [])).lower(): i_tag.replace_with(" X ")
+                        testo = node.get_text(separator=" ", strip=True).upper().replace('×', 'X').replace('*', 'X')
+                        if re.search(r'X\s*2|X\s*3|AUTOHIT', testo): valid_nodes.append(node)
+                    
+                    containers = []
+                    for v in valid_nodes:
+                        p = v.find_parent(['ul', 'tbody', 'table'])
+                        if p and p not in containers: containers.append(p)
+                    
+                    if len(containers) < 2: continue
 
-                phA, ahA, gA = processa_team(containers[0])
-                phB, ahB, gB = processa_team(containers[1])
-                scA, scB = phA + ahB, phB + phA
-                bonA, bonB = calcola_bonus_squadra(scA, scB), calcola_bonus_squadra(scB, scA)
-                
-                for lista, b_t in [(gA, bonA), (gB, bonB)]:
-                    for g in lista:
-                        # Raddoppio solo se è una delle ragazze della lista ufficiale
-                        molt = 2.0 if g['nome'].upper() in [n.upper() for n in lista_femm] else 1.0
-                        p_tot = (((g['h2'] + g['h3']) * molt) - g['ah'] - (g['amm'] * 10) - (g['esp'] * 20)) + b_t
-                        
-                        if g['nome'] not in giocatori_db:
-                            giocatori_db[g['nome']] = {"punti_giornate": {}, "categoria": nomi_ammessi[g['nome'].upper()]['categoria']}
-                        
-                        current_pts = giocatori_db[g['nome']]["punti_giornate"].get(g_id, 0)
-                        giocatori_db[g['nome']]["punti_giornate"][g_id] = current_pts + p_tot
-            except: continue
+                    def processa_team(parent_node):
+                        p_h, ah_s, dati = 0, 0, []
+                        for n in parent_node.find_all(['li', 'tr']):
+                            testo_raw = n.get_text(separator=" ", strip=True).upper().replace('×', 'X').replace('*', 'X')
+                            if not re.search(r'\d', testo_raw): continue
+                            strings = list(n.stripped_strings)
+                            nome = strings[0] if strings else ""
+                            if not nome or len(nome) < 3 or "TOTALE" in nome: continue
+                            
+                            # FILTRO WHITE LIST
+                            if nome.upper() not in nomi_ammessi: continue
+                            
+                            h2 = sum(int(x) for x in re.findall(r'(\d+)\s*X\s*2', testo_raw))
+                            h3 = sum(int(x) for x in re.findall(r'(\d+)\s*X\s*3', testo_raw))
+                            ah = sum(int(x) for x in re.findall(r'(\d+)\s*AUTOHIT', testo_raw))
+                            amm = len(n.find_all(['i', 'span'], class_=re.compile(r'warning', re.I)))
+                            esp = len(n.find_all(['i', 'span'], class_=re.compile(r'danger', re.I)))
+                            p_h += (h2 * 2) + (h3 * 3)
+                            ah_s += ah
+                            dati.append({'nome': nome, 'h2': h2, 'h3': h3, 'ah': ah, 'amm': amm, 'esp': esp})
+                        return p_h, ah_s, dati
 
-    print("\nInvio dati a Firebase (Solo nomi autorizzati)...")
+                    phA, ahA, gA = processa_team(containers[0])
+                    phB, ahB, gB = processa_team(containers[1])
+                    scA, scB = phA + ahB, phB + ahA
+                    bonA, bonB = calcola_bonus_squadra(scA, scB), calcola_bonus_squadra(scB, scA)
+
+                    for lista, bonus_squadra in [(gA, bonA), (gB, bonB)]:
+                        for g in lista:
+                            nome_u = g['nome'].upper()
+                            is_fem = nome_u in QUOTE_ROSA
+                            
+                            # Forza categoria FEM per le ragazze, altrimenti usa quella della white list
+                            categoria_fanta = "FEM" if is_fem else nomi_ammessi[nome_u]['categoria']
+                            molt = 2.0 if is_fem else 1.0
+                            
+                            # Calcolo: (Hit * Molt) - Autohit - Malus Ammonizione/Espulsione + Bonus Squadra
+                            p_tot = (((g['h2'] + g['h3']) * molt) - g['ah'] - (g['amm'] * 10) - (g['esp'] * 20)) + bonus_squadra
+                            
+                            if g['nome'] not in giocatori_db:
+                                giocatori_db[g['nome']] = {"punti_giornate": {}, "categoria": categoria_fanta}
+                            
+                            # Somma algebrica per doppie partite nella stessa giornata
+                            giocatori_db[g['nome']]["punti_giornate"][giornata_id] = giocatori_db[g['nome']]["punti_giornate"].get(giornata_id, 0) + p_tot
+                except Exception as e:
+                    print(f"Errore partita {link_partita}: {e}")
+                    continue
+        except Exception as e:
+            print(f"Errore campionato {cat_nome}: {e}")
+
+    # 3. Invio Batch a Firebase (Senza cancellare i prezzi)
+    print(f"\nSalvataggio di {len(giocatori_db)} giocatori su Firebase...")
     batch = db.batch()
-    for n, d in giocatori_db.items():
-        doc_ref = db.collection("giocatori").document(n)
-        batch.set(doc_ref, {
-            "nome_reale": n,
-            "categoria": d["categoria"],
-            "punti_giornate": d["punti_giornate"],
-            "punteggio_campionato": sum(d["punti_giornate"].values())
-        }, merge=True)
+    for nome, info in giocatori_db.items():
+        doc_ref = db.collection("giocatori").document(nome)
+        aggiornamento = {
+            "nome_reale": nome,
+            "categoria": info["categoria"],
+            "punti_giornate": info["punti_giornate"],
+            "punteggio_campionato": sum(info["punti_giornate"].values())
+        }
+        batch.set(doc_ref, aggiornamento, merge=True)
+    
     batch.commit()
-    print("FINITO.")
+    print("Operazione completata con successo.")
 
-if __name__ == "__main__": scraper_professionale()
+if __name__ == "__main__":
+    scraper_professionale()
