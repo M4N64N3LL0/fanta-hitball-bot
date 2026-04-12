@@ -59,10 +59,54 @@ def estrai_dati_squadra(team_list):
     punti_reali_fatti = (h2_tot * 2) + (h3_tot * 3)
     return punti_reali_fatti, ah_tot, giocatori_html
 
+# --- NUOVA FUNZIONE: RECUPERA LE FOTO DALLA PAGINA GIOCATORI ---
+def estrai_catalogo_foto():
+    print("Scansione pagina giocatori per estrarre il database fotografico...")
+    catalogo = {}
+    
+    # Scansioniamo fino a 5 pagine nel caso in cui i giocatori siano divisi in più pagine
+    for page in range(1, 6):
+        url = f"https://referto.plvhitball.it/index.php?route=team/player&page={page}"
+        r = requests.get(url)
+        if r.status_code != 200: break
+            
+        soup = BeautifulSoup(r.text, 'html.parser')
+        
+        # Troviamo tutte le immagini della pagina
+        immagini = soup.find_all('img')
+        for img in immagini:
+            src = img.get('src', '')
+            if not src or "placeholder" in src.lower() or "no_image" in src.lower():
+                continue
+                
+            # Costruiamo il link assoluto
+            foto_url = src if src.startswith('http') else f"https://referto.plvhitball.it/{src.lstrip('/')}"
+            
+            # Recuperiamo il nome del giocatore (solitamente nell'alt, title o nel testo vicino)
+            nome = img.get('alt', '').strip().upper()
+            if not nome or nome == 'IMAGE':
+                nome = img.get('title', '').strip().upper()
+                
+            if not nome:
+                # Se non ha alt, proviamo a prendere il testo subito sotto l'immagine
+                parent = img.find_parent('div')
+                if parent:
+                    testi = [t.strip().upper() for t in parent.stripped_strings if len(t) > 3 and not t.lower().endswith(('.png', '.jpg'))]
+                    if testi: nome = testi[0]
+            
+            if nome:
+                catalogo[nome] = foto_url
+                
+    print(f"Fatto! Trovate {len(catalogo)} foto nel catalogo PLV.")
+    return catalogo
+
 def scraper_professionale():
     db = avvia_firebase()
     if not db:
         return 
+
+    # SCARICHIAMO LE FOTO PRIMA DI INIZIARE CON I REFERTI
+    catalogo_foto = estrai_catalogo_foto()
 
     campionati = {
         "A1": "https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id=39",
@@ -121,20 +165,17 @@ def scraper_professionale():
                         if not testi: continue
                         nome = testi[0]
                         
-                        # --- NUOVA SEZIONE: ESTRAZIONE FOTO ---
-                        foto_url = None
-                        img_tag = blocco.find('img')
-                        if img_tag and 'src' in img_tag.attrs:
-                            src_link = img_tag['src']
-                            # Verifichiamo che non sia un'icona di sistema o un placeholder generico di OpenCart
-                            if "placeholder" not in src_link.lower() and "no_image" not in src_link.lower():
-                                if src_link.startswith('/'):
-                                    foto_url = "https://referto.plvhitball.it" + src_link
-                                elif src_link.startswith('http'):
-                                    foto_url = src_link
-                                else:
-                                    foto_url = "https://referto.plvhitball.it/" + src_link
-                        # -------------------------------------
+                        # --- NUOVA SEZIONE: ASSEGNAZIONE FOTO DAL CATALOGO ---
+                        nome_pulito = nome.strip().upper()
+                        foto_url = catalogo_foto.get(nome_pulito)
+                        
+                        # Se il nome sul referto è leggermente diverso, facciamo un match flessibile
+                        if not foto_url:
+                            for k, v in catalogo_foto.items():
+                                if nome_pulito in k or k in nome_pulito:
+                                    foto_url = v
+                                    break
+                        # -----------------------------------------------------
                         
                         h2 = sum([int(t.replace('x2','').strip() or 0) for t in testi if 'x2' in t])
                         h3 = sum([int(t.replace('x3','').strip() or 0) for t in testi if 'x3' in t])
@@ -149,7 +190,6 @@ def scraper_professionale():
                         punti_totali = punti_base + bonus_team + malus_tavolino
 
                         if nome not in giocatori_data:
-                            # Se è un nuovo giocatore, salviamo anche la foto (se l'abbiamo trovata)
                             giocatori_data[nome] = {
                                 "punti_giornate": {},
                                 "nome_reale": nome
@@ -157,7 +197,6 @@ def scraper_professionale():
                             if foto_url:
                                 giocatori_data[nome]["foto_url"] = foto_url
                         elif foto_url and "foto_url" not in giocatori_data[nome]:
-                            # Se l'avevamo già incontrato ma senza foto, e ora l'abbiamo trovata, l'aggiungiamo
                             giocatori_data[nome]["foto_url"] = foto_url
                         
                         giocatori_data[nome]["punti_giornate"][giornata_id] = punti_totali
@@ -167,7 +206,6 @@ def scraper_professionale():
     contatore = 0
     for nome, info in giocatori_data.items():
         doc_ref = db.collection("giocatori").document(nome)
-        # Salviamo su Firestore sia i punti che (se presente) l'URL della foto
         batch.set(doc_ref, info, merge=True)
         contatore += 1
         if contatore % 450 == 0:
