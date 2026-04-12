@@ -1,10 +1,11 @@
+import os
+import json
 import requests
 from bs4 import BeautifulSoup
 import firebase_admin
 from firebase_admin import credentials, firestore
-import os
 
-# --- 1. CONFIGURAZIONE E LISTE ---
+# --- CONFIGURAZIONE ---
 QUOTE_ROSA_FEM = [
     "FEDERICA FUNNONE", "MARTINA LUPO", "SABRINA CAPITOLO", "ARIANNA VISMARA", 
     "SABRINA ZANFRETTA", "SARA SOTTOLANO", "MARTINA BRACESCO", "ROSSELLA DE BLASIO", 
@@ -14,97 +15,76 @@ QUOTE_ROSA_FEM = [
 
 def inizializza_firebase():
     if not firebase_admin._apps:
-        # Cerca il segreto di GitHub o il file locale
-        firebase_secret = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
-        if firebase_secret:
+        cred_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
+        if cred_json:
+            # Siamo su GitHub: creiamo il file dalle variabili d'ambiente
             with open("serviceAccountKey.json", "w") as f:
-                f.write(firebase_secret)
-        
-        cred = credentials.Certificate("serviceAccountKey.json")
+                f.write(cred_json)
+            cred = credentials.Certificate("serviceAccountKey.json")
+        else:
+            # Siamo in locale: usiamo il file fisico
+            cred = credentials.Certificate("serviceAccountKey.json")
         firebase_admin.initialize_app(cred)
     return firestore.client()
 
-# --- 2. LOGICA CALCOLO PUNTI (REGOLE UFFICIALI) ---
-def calcola_punteggio_finale(nome, hits, fatti, subiti, giallo, rosso, tavolino):
-    # Regola Base: 1 hit = 1pt | FEM = 2pt
+def calcola_voto(nome, hits, fatti, subiti, giallo, rosso, tavolino):
+    # Regola base: 1 hit = 1pt | FEM = 2pt
     is_fem = nome.upper().strip() in QUOTE_ROSA_FEM
     punti_base = (hits * 2) if is_fem else hits
     
     # Bonus Squadra Segnati
-    bonus_fatti = 0
-    if fatti >= 76: bonus_fatti = 5
-    elif fatti >= 51: bonus_fatti = 2
+    bonus_fatti = 5 if fatti >= 76 else (2 if fatti >= 51 else 0)
     
     # Bonus Squadra Subiti
-    bonus_subiti = 0
     if subiti <= 50: bonus_subiti = 5
     elif subiti <= 75: bonus_subiti = 2
-    elif subiti >= 101: bonus_subiti = -5
+    elif subiti <= 100: bonus_subiti = 0
+    else: bonus_subiti = -5 # 101+
     
-    # Malus Disciplinari (Quadratini)
-    malus_giallo = -10 if giallo else 0
-    malus_rosso = -20 if rosso else 0
-    malus_tavolino = -20 if tavolino else 0
+    # Malus Disciplinari (Icone FontAwesome)
+    malus = ( -10 if giallo else 0 ) + ( -20 if rosso else 0 ) + ( -20 if tavolino else 0 )
     
-    return punti_base + bonus_fatti + bonus_subiti + malus_giallo + malus_rosso + malus_tavolino
+    return punti_base + bonus_fatti + bonus_subiti + malus
 
-# --- 3. SCRAPER E ANALISI REFERTO ---
-def analizza_partita(url_referto, giornata, sconfitta_tavolino_casa=False, sconfitta_tavolino_trasferta=False):
+def analizza_partita(url, giornata):
     db = inizializza_firebase()
-    print(f"Avvio Scraping Giornata {giornata}...")
+    res = requests.get(url)
+    soup = BeautifulSoup(res.text, 'html.parser')
 
-    response = requests.get(url_referto)
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Trova le tabelle (solitamente table-condensed nel referto PLV)
+    # Trova tabelle referto
     tabelle = soup.find_all('table', class_='table-condensed')
-    if len(tabelle) < 2:
-        print("Errore: tabelle non trovate. Verifica l'URL.")
-        return
-
-    # Estrazione Totale Punti Squadra (per calcolo subiti/fatti)
-    # Di solito l'ultima riga della tabella contiene il totale
-    totale_casa = int(tabelle[0].find_all('tr')[-1].find_all('td')[2].text.strip())
-    totale_trasferta = int(tabelle[1].find_all('tr')[-1].find_all('td')[2].text.strip())
+    
+    # Punteggi totali per bonus
+    tot_casa = int(tabelle[0].find_all('tr')[-1].find_all('td')[2].text.strip())
+    tot_trasf = int(tabelle[1].find_all('tr')[-1].find_all('td')[2].text.strip())
 
     for i, tabella in enumerate(tabelle):
         is_casa = (i == 0)
-        fatti = totale_casa if is_casa else totale_trasferta
-        subiti = totale_trasferta if is_casa else totale_casa
-        tavolino = sconfitta_tavolino_casa if is_casa else sconfitta_tavolino_trasferta
-
-        # Analisi righe giocatori
-        righe = tabella.find_all('tr')[1:-1] # Salta intestazione e riga totale
+        fatti = tot_casa if is_casa else tot_trasf
+        subiti = tot_trasf if is_casa else tot_casa
+        
+        righe = tabella.find_all('tr')[1:-1]
         for riga in righe:
             cols = riga.find_all('td')
             if len(cols) < 3: continue
             
             nome = cols[1].text.strip().upper()
-            try:
-                hits = int(cols[2].text.strip())
-            except ValueError: continue
-
-            # --- Rilevamento Quadratini (Cartellini) ---
-            # Cerchiamo l'icona <i class="fas fa-square text-warning">
+            hits = int(cols[2].text.strip())
+            
+            # RILEVAMENTO QUADRATINI (fas fa-square)
             giallo = riga.find('i', class_='text-warning') is not None
             rosso = riga.find('i', class_='text-danger') is not None
+            
+            voto_finale = calcola_voto(nome, hits, fatti, subiti, giallo, rosso, False)
 
-            # Calcolo finale
-            punti_finali = calcola_punteggio_finale(nome, hits, fatti, subiti, giallo, rosso, tavolino)
-
-            # --- Aggiornamento Firebase ---
-            doc_ref = db.collection('giocatori').document(nome)
-            doc_ref.set({
-                'punti_giornate': {
-                    str(giornata): punti_finali
-                }
+            # SALVATAGGIO SU FIREBASE
+            db.collection('giocatori').document(nome).set({
+                'punti_giornate': { str(giornata): voto_finale }
             }, merge=True)
+            print(f"Aggiornato {nome}: {voto_finale} pt")
 
-            print(f"Aggiornato: {nome} | {punti_finali} PT (Hits: {hits}, G: {giallo}, R: {rosso})")
-
-# --- 4. ESECUZIONE ---
 if __name__ == "__main__":
-    # Cambia questi valori per ogni giornata
-    URL = "https://referto.plvhitball.it/index.php?route=referto/referto&referto_id=XXXX"
+    # INSERISCI QUI L'URL E LA GIORNATA PRIMA DI FARE IL PUSH
+    URL_REFERTO = "https://referto.plvhitball.it/index.php?route=referto/referto&referto_id=XXXX"
     GIORNATA = 1
-    analizza_partita(URL, GIORNATA)
+    analizza_partita(URL_REFERTO, GIORNATA)
