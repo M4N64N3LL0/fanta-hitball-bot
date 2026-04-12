@@ -1,28 +1,27 @@
 name: Aggiornamento Punti FantaHitball
 
 on:
-  schedule:
-    # Si attiva ogni ora al minuto 0, dalle 06:00 alle 22:00 UTC
-    # In Italia corrisponde a: ogni ora dalle 07:00 alle 23:00 (o 08:00-00:00)
-    - cron: '0 6-22 * * *'
-  workflow_dispatch: # Permette di avviarlo a mano se hai fretta
+  workflow_dispatch: # Ti permette di farlo partire a mano cliccando su "Run workflow"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Scarica codice
+      - name: Checkout del codice
         uses: actions/checkout@v3
 
-      - name: Imposta Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
-      - name: Installa librerie
-        run: pip install -r requirements.txt
+      - name: Installazione librerie
+        run: |
+          pip install requests beautifulsoup4 firebase-admin
 
-      - name: Esegui Scraper
+      - name: Esecuzione Scraper
         env:
-          FIREBASE_KEY: ${{ secrets.FIREBASE_KEY }}
+          # Questo collega il Secret di GitHub al codice Python
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: python scraper.py
