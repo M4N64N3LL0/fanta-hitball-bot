@@ -17,74 +17,97 @@ def inizializza_firebase():
     if not firebase_admin._apps:
         cred_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         if cred_json:
-            # Siamo su GitHub: creiamo il file dalle variabili d'ambiente
-            with open("serviceAccountKey.json", "w") as f:
-                f.write(cred_json)
-            cred = credentials.Certificate("serviceAccountKey.json")
+            # GitHub Actions
+            config_dict = json.loads(cred_json)
+            cred = credentials.Certificate(config_dict)
         else:
-            # Siamo in locale: usiamo il file fisico
+            # Locale
             cred = credentials.Certificate("serviceAccountKey.json")
         firebase_admin.initialize_app(cred)
     return firestore.client()
 
-def calcola_voto(nome, hits, fatti, subiti, giallo, rosso, tavolino):
-    # Regola base: 1 hit = 1pt | FEM = 2pt
+def calcola_punteggio_fanta(nome, hits, fatti, subiti, giallo, rosso, tavolino):
+    # 1. Punti base: 1 hit = 1pt | FEM = 2pt
     is_fem = nome.upper().strip() in QUOTE_ROSA_FEM
     punti_base = (hits * 2) if is_fem else hits
     
-    # Bonus Squadra Segnati
-    bonus_fatti = 5 if fatti >= 76 else (2 if fatti >= 51 else 0)
+    # 2. Bonus Squadra Segnati
+    bonus_fatti = 0
+    if fatti >= 76: bonus_fatti = 5
+    elif fatti >= 51: bonus_fatti = 2
     
-    # Bonus Squadra Subiti
+    # 3. Bonus/Malus Squadra Subiti
+    bonus_subiti = 0
     if subiti <= 50: bonus_subiti = 5
     elif subiti <= 75: bonus_subiti = 2
-    elif subiti <= 100: bonus_subiti = 0
-    else: bonus_subiti = -5 # 101+
+    elif subiti >= 101: bonus_subiti = -5
     
-    # Malus Disciplinari (Icone FontAwesome)
-    malus = ( -10 if giallo else 0 ) + ( -20 if rosso else 0 ) + ( -20 if tavolino else 0 )
+    # 4. Malus Disciplinari (Dall'ispezione quadratini)
+    malus_giallo = -10 if giallo else 0
+    malus_rosso = -20 if rosso else 0
+    malus_tavolino = -20 if tavolino else 0
     
-    return punti_base + bonus_fatti + bonus_subiti + malus
+    return punti_base + bonus_fatti + bonus_subiti + malus_giallo + malus_rosso + malus_tavolino
 
-def analizza_partita(url, giornata):
+def analizza_partita(url, giornata, tavolino_casa=False, tavolino_trasferta=False):
     db = inizializza_firebase()
-    res = requests.get(url)
+    try:
+        res = requests.get(url, timeout=10)
+        res.raise_for_status()
+    except Exception as e:
+        print(f"Errore connessione: {e}")
+        return
+
     soup = BeautifulSoup(res.text, 'html.parser')
-
-    # Trova tabelle referto
     tabelle = soup.find_all('table', class_='table-condensed')
-    
-    # Punteggi totali per bonus
-    tot_casa = int(tabelle[0].find_all('tr')[-1].find_all('td')[2].text.strip())
-    tot_trasf = int(tabelle[1].find_all('tr')[-1].find_all('td')[2].text.strip())
 
-    for i, tabella in enumerate(tabelle):
+    if len(tabelle) < 2:
+        print("Errore: Non ho trovato le due tabelle delle squadre.")
+        return
+
+    # Estrazione Totali (Ultima riga delle tabelle)
+    try:
+        tot_casa = int(tabelle[0].find_all('tr')[-1].find_all('td')[2].text.strip())
+        tot_trasferta = int(tabelle[1].find_all('tr')[-1].find_all('td')[2].text.strip())
+    except (IndexError, ValueError) as e:
+        print(f"Errore estrazione totali: {e}. Il referto potrebbe essere incompleto.")
+        return
+
+    print(f"--- ANALISI GIORNATA {giornata} ---")
+    print(f"Risultato: {tot_casa} - {tot_trasferta}")
+
+    for i, tabella in enumerate(tabelle[:2]):
         is_casa = (i == 0)
-        fatti = tot_casa if is_casa else tot_trasf
-        subiti = tot_trasf if is_casa else tot_casa
+        fatti = tot_casa if is_casa else tot_trasferta
+        subiti = tot_trasferta if is_casa else tot_casa
+        tavolino = tavolino_casa if is_casa else tavolino_trasferta
         
-        righe = tabella.find_all('tr')[1:-1]
+        righe = tabella.find_all('tr')[1:-1] # Salto header e riga totali
         for riga in righe:
             cols = riga.find_all('td')
             if len(cols) < 3: continue
             
             nome = cols[1].text.strip().upper()
-            hits = int(cols[2].text.strip())
-            
-            # RILEVAMENTO QUADRATINI (fas fa-square)
+            try:
+                hits = int(cols[2].text.strip())
+            except: continue
+
+            # Rilevamento Quadratini (Cartellini)
+            # Cerco l'icona con classe text-warning (giallo) o text-danger (rosso)
             giallo = riga.find('i', class_='text-warning') is not None
             rosso = riga.find('i', class_='text-danger') is not None
-            
-            voto_finale = calcola_voto(nome, hits, fatti, subiti, giallo, rosso, False)
 
-            # SALVATAGGIO SU FIREBASE
+            punti_finali = calcola_punteggio_fanta(nome, hits, fatti, subiti, giallo, rosso, tavolino)
+
+            # Invio a Firebase
             db.collection('giocatori').document(nome).set({
-                'punti_giornate': { str(giornata): voto_finale }
+                'punti_giornate': { str(giornata): punti_finali }
             }, merge=True)
-            print(f"Aggiornato {nome}: {voto_finale} pt")
+            
+            print(f"Aggiornato {nome}: {punti_finali} pt (Giallo: {giallo}, Rosso: {rosso})")
 
 if __name__ == "__main__":
-    # INSERISCI QUI L'URL E LA GIORNATA PRIMA DI FARE IL PUSH
-    URL_REFERTO = "https://referto.plvhitball.it/index.php?route=referto/referto&referto_id=XXXX"
-    GIORNATA = 1
-    analizza_partita(URL_REFERTO, GIORNATA)
+    # URL di esempio e Giornata
+    URL_MERCATO = "INSERISCI_URL_QUI"
+    GIORNATA_ATTUALE = 1
+    analizza_partita(URL_MERCATO, GIORNATA_ATTUALE)
