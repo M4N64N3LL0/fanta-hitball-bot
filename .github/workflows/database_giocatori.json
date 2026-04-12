@@ -1,0 +1,2450 @@
+[
+    {
+        "nome_display": "Pietro Evangelista (Flamurtari)",
+        "nome_reale": "Pietro Evangelista",
+        "squadra": "Flamurtari",
+        "categoria": "A1",
+        "punti_campionato": "507",
+        "prezzo": 120
+    },
+    {
+        "nome_display": "Federico Pistidda (Lab To Hit)",
+        "nome_reale": "Federico Pistidda",
+        "squadra": "Lab To Hit",
+        "categoria": "A1",
+        "punti_campionato": "376",
+        "prezzo": 92
+    },
+    {
+        "nome_display": "Luca Fagherazzi (Genova Hit Ball)",
+        "nome_reale": "Luca Fagherazzi",
+        "squadra": "Genova Hit Ball",
+        "categoria": "A1",
+        "punti_campionato": "376",
+        "prezzo": 95
+    },
+    {
+        "nome_display": "Simone Selvaggio (Piccolo Club)",
+        "nome_reale": "Simone Selvaggio",
+        "squadra": "Piccolo Club",
+        "categoria": "A1",
+        "punti_campionato": "328",
+        "prezzo": 82
+    },
+    {
+        "nome_display": "Andrea Belcastro (Red Devils)",
+        "nome_reale": "Andrea Belcastro",
+        "squadra": "Red Devils",
+        "categoria": "A1",
+        "punti_campionato": "328",
+        "prezzo": 88
+    },
+    {
+        "nome_display": "Mirko Violetto (Sunknights)",
+        "nome_reale": "Mirko Violetto",
+        "squadra": "Sunknights",
+        "categoria": "A1",
+        "punti_campionato": "320",
+        "prezzo": 86
+    },
+    {
+        "nome_display": "Luca Cardinali (Lab To Hit)",
+        "nome_reale": "Luca Cardinali",
+        "squadra": "Lab To Hit",
+        "categoria": "A1",
+        "punti_campionato": "309",
+        "prezzo": 79
+    },
+    {
+        "nome_display": "Federico Garrone (Red Devils)",
+        "nome_reale": "Federico Garrone",
+        "squadra": "Red Devils",
+        "categoria": "A1",
+        "punti_campionato": "290",
+        "prezzo": 80
+    },
+    {
+        "nome_display": "Amedeo Biglino (Evolution)",
+        "nome_reale": "Amedeo Biglino",
+        "squadra": "Evolution",
+        "categoria": "A1",
+        "punti_campionato": "266",
+        "prezzo": 77
+    },
+    {
+        "nome_display": "Roberto Coletta (Sotomayor)",
+        "nome_reale": "Roberto Coletta",
+        "squadra": "Sotomayor",
+        "categoria": "A1",
+        "punti_campionato": "263",
+        "prezzo": 76
+    },
+    {
+        "nome_display": "Matteo Turigliatto (Flamurtari)",
+        "nome_reale": "Matteo Turigliatto",
+        "squadra": "Flamurtari",
+        "categoria": "A1",
+        "punti_campionato": "250",
+        "prezzo": 74
+    },
+    {
+        "nome_display": "Antonio De Rosa (Pazzeschi)",
+        "nome_reale": "Antonio De Rosa",
+        "squadra": "Pazzeschi",
+        "categoria": "A1",
+        "punti_campionato": "238",
+        "prezzo": 72
+    },
+    {
+        "nome_display": "Mattia Rizzon (Lab To Hit)",
+        "nome_reale": "Mattia Rizzon",
+        "squadra": "Lab To Hit",
+        "categoria": "A1",
+        "punti_campionato": "233",
+        "prezzo": 69
+    },
+    {
+        "nome_display": "Davide Giordano (Evolution)",
+        "nome_reale": "Davide Giordano",
+        "squadra": "Evolution",
+        "categoria": "A1",
+        "punti_campionato": "224",
+        "prezzo": 70
+    },
+    {
+        "nome_display": "Riccardo Francabandiera (Skoppiati)",
+        "nome_reale": "Riccardo Francabandiera",
+        "squadra": "Skoppiati",
+        "categoria": "A1",
+        "punti_campionato": "215",
+        "prezzo": 67
+    },
+    {
+        "nome_display": "Raffaele Maurelli (Evolution)",
+        "nome_reale": "Raffaele Maurelli",
+        "squadra": "Evolution",
+        "categoria": "A1",
+        "punti_campionato": "214",
+        "prezzo": 66
+    },
+    {
+        "nome_display": "Filippo Rovai (Sotomayor)",
+        "nome_reale": "Filippo Rovai",
+        "squadra": "Sotomayor",
+        "categoria": "A1",
+        "punti_campionato": "203",
+        "prezzo": 64
+    },
+    {
+        "nome_display": "Luca Siciliano (Genova Hit Ball)",
+        "nome_reale": "Luca Siciliano",
+        "squadra": "Genova Hit Ball",
+        "categoria": "A1",
+        "punti_campionato": "197",
+        "prezzo": 63
+    },
+    {
+        "nome_display": "Luca Cangialosi (Pazzeschi)",
+        "nome_reale": "Luca Cangialosi",
+        "squadra": "Pazzeschi",
+        "categoria": "A1",
+        "punti_campionato": "190",
+        "prezzo": 61
+    },
+    {
+        "nome_display": "Dario Ravera (Genova Hit Ball)",
+        "nome_reale": "Dario Ravera",
+        "squadra": "Genova Hit Ball",
+        "categoria": "A1",
+        "punti_campionato": "190",
+        "prezzo": 60
+    },
+    {
+        "nome_display": "Marco De Salvo (Sotomayor)",
+        "nome_reale": "Marco De Salvo",
+        "squadra": "Sotomayor",
+        "categoria": "A1",
+        "punti_campionato": "188",
+        "prezzo": 59
+    },
+    {
+        "nome_display": "Daniel Tiago Guzzafame (Sunknights)",
+        "nome_reale": "Daniel Tiago Guzzafame",
+        "squadra": "Sunknights",
+        "categoria": "A1",
+        "punti_campionato": "186",
+        "prezzo": 58
+    },
+    {
+        "nome_display": "Leonardo Farina (Genova Hit Ball)",
+        "nome_reale": "Leonardo Farina",
+        "squadra": "Genova Hit Ball",
+        "categoria": "A1",
+        "punti_campionato": "185",
+        "prezzo": 57
+    },
+    {
+        "nome_display": "Riccardo Marello (Piccolo Club)",
+        "nome_reale": "Riccardo Marello",
+        "squadra": "Piccolo Club",
+        "categoria": "A1",
+        "punti_campionato": "184",
+        "prezzo": 52
+    },
+    {
+        "nome_display": "Antonio Mirco Santarsia (Evolution)",
+        "nome_reale": "Antonio Mirco Santarsia",
+        "squadra": "Evolution",
+        "categoria": "A1",
+        "punti_campionato": "181",
+        "prezzo": 56
+    },
+    {
+        "nome_display": "Ion Soroceanu (Skoppiati)",
+        "nome_reale": "Ion Soroceanu",
+        "squadra": "Skoppiati",
+        "categoria": "A1",
+        "punti_campionato": "173",
+        "prezzo": 55
+    },
+    {
+        "nome_display": "Alessio Casali (Sunknights)",
+        "nome_reale": "Alessio Casali",
+        "squadra": "Sunknights",
+        "categoria": "A1",
+        "punti_campionato": "171",
+        "prezzo": 54
+    },
+    {
+        "nome_display": "Andrea Rigoni (Pazzeschi)",
+        "nome_reale": "Andrea Rigoni",
+        "squadra": "Pazzeschi",
+        "categoria": "A1",
+        "punti_campionato": "170",
+        "prezzo": 53
+    },
+    {
+        "nome_display": "Donald Basso (Piccolo Club)",
+        "nome_reale": "Donald Basso",
+        "squadra": "Piccolo Club",
+        "categoria": "A1",
+        "punti_campionato": "163",
+        "prezzo": 50
+    },
+    {
+        "nome_display": "Giulio Naggi (Evolution)",
+        "nome_reale": "Giulio Naggi",
+        "squadra": "Evolution",
+        "categoria": "A1",
+        "punti_campionato": "154",
+        "prezzo": 51
+    },
+    {
+        "nome_display": "Gabriel Alessandro Delgrosso (Red Devils)",
+        "nome_reale": "Gabriel Alessandro Delgrosso",
+        "squadra": "Red Devils",
+        "categoria": "A1",
+        "punti_campionato": "147",
+        "prezzo": 49
+    },
+    {
+        "nome_display": "Luca Ambrosino (Pazzeschi)",
+        "nome_reale": "Luca Ambrosino",
+        "squadra": "Pazzeschi",
+        "categoria": "A1",
+        "punti_campionato": "145",
+        "prezzo": 48
+    },
+    {
+        "nome_display": "Maurizio Rattalino (Sunknights)",
+        "nome_reale": "Maurizio Rattalino",
+        "squadra": "Sunknights",
+        "categoria": "A1",
+        "punti_campionato": "144",
+        "prezzo": 47
+    },
+    {
+        "nome_display": "Mattia Vazzoler (Red Devils)",
+        "nome_reale": "Mattia Vazzoler",
+        "squadra": "Red Devils",
+        "categoria": "A1",
+        "punti_campionato": "144",
+        "prezzo": 46
+    },
+    {
+        "nome_display": "Federico D'Oria (Lab To Hit)",
+        "nome_reale": "Federico D'Oria",
+        "squadra": "Lab To Hit",
+        "categoria": "A1",
+        "punti_campionato": "140",
+        "prezzo": 45
+    },
+    {
+        "nome_display": "Gaspare Guarrato (Evolution)",
+        "nome_reale": "Gaspare Guarrato",
+        "squadra": "Evolution",
+        "categoria": "A1",
+        "punti_campionato": "133",
+        "prezzo": 44
+    },
+    {
+        "nome_display": "Riccardo Damiano (Flamurtari)",
+        "nome_reale": "Riccardo Damiano",
+        "squadra": "Flamurtari",
+        "categoria": "A1",
+        "punti_campionato": "127",
+        "prezzo": 43
+    },
+    {
+        "nome_display": "Michele Messina (Red Devils)",
+        "nome_reale": "Michele Messina",
+        "squadra": "Red Devils",
+        "categoria": "A1",
+        "punti_campionato": "126",
+        "prezzo": 42
+    },
+    {
+        "nome_display": "Stefano Calvo (Lab To Hit)",
+        "nome_reale": "Stefano Calvo",
+        "squadra": "Lab To Hit",
+        "categoria": "A1",
+        "punti_campionato": "126",
+        "prezzo": 39
+    },
+    {
+        "nome_display": "Daniele Agnello (Sotomayor)",
+        "nome_reale": "Daniele Agnello",
+        "squadra": "Sotomayor",
+        "categoria": "A1",
+        "punti_campionato": "124",
+        "prezzo": 41
+    },
+    {
+        "nome_display": "Daniele Botosso (Piccolo Club)",
+        "nome_reale": "Daniele Botosso",
+        "squadra": "Piccolo Club",
+        "categoria": "A1",
+        "punti_campionato": "123",
+        "prezzo": 37
+    },
+    {
+        "nome_display": "Davide Ciancio (Genova Hit Ball)",
+        "nome_reale": "Davide Ciancio",
+        "squadra": "Genova Hit Ball",
+        "categoria": "A1",
+        "punti_campionato": "122",
+        "prezzo": 40
+    },
+    {
+        "nome_display": "Stefano Benedetto (Sunknights)",
+        "nome_reale": "Stefano Benedetto",
+        "squadra": "Sunknights",
+        "categoria": "A1",
+        "punti_campionato": "116",
+        "prezzo": 38
+    },
+    {
+        "nome_display": "Matteo Cipolletta (Piccolo Club)",
+        "nome_reale": "Matteo Cipolletta",
+        "squadra": "Piccolo Club",
+        "categoria": "A1",
+        "punti_campionato": "112",
+        "prezzo": 34
+    },
+    {
+        "nome_display": "Simone Gabellini (Sotomayor)",
+        "nome_reale": "Simone Gabellini",
+        "squadra": "Sotomayor",
+        "categoria": "A1",
+        "punti_campionato": "112",
+        "prezzo": 36
+    },
+    {
+        "nome_display": "Leonardo Cicogna (Piccolo Club)",
+        "nome_reale": "Leonardo Cicogna",
+        "squadra": "Piccolo Club",
+        "categoria": "A1",
+        "punti_campionato": "108",
+        "prezzo": 35
+    },
+    {
+        "nome_display": "Enrico Demonte (Sotomayor)",
+        "nome_reale": "Enrico Demonte",
+        "squadra": "Sotomayor",
+        "categoria": "A1",
+        "punti_campionato": "104",
+        "prezzo": 33
+    },
+    {
+        "nome_display": "Riccardo Simini (Red Devils)",
+        "nome_reale": "Riccardo Simini",
+        "squadra": "Red Devils",
+        "categoria": "A1",
+        "punti_campionato": "103",
+        "prezzo": 32
+    },
+    {
+        "nome_display": "Andrea Cacioli (Skoppiati)",
+        "nome_reale": "Andrea Cacioli",
+        "squadra": "Skoppiati",
+        "categoria": "A1",
+        "punti_campionato": "103",
+        "prezzo": 31
+    },
+    {
+        "nome_display": "Davide Salvaggio (Red Devils)",
+        "nome_reale": "Davide Salvaggio",
+        "squadra": "Red Devils",
+        "categoria": "A1",
+        "punti_campionato": "100",
+        "prezzo": 30
+    },
+    {
+        "nome_display": "Alessio Petrosino (Sotomayor)",
+        "nome_reale": "Alessio Petrosino",
+        "squadra": "Sotomayor",
+        "categoria": "A1",
+        "punti_campionato": "100",
+        "prezzo": 29
+    },
+    {
+        "nome_display": "Davide Brunello (Evolution)",
+        "nome_reale": "Davide Brunello",
+        "squadra": "Evolution",
+        "categoria": "A1",
+        "punti_campionato": "92",
+        "prezzo": 28
+    },
+    {
+        "nome_display": "Lennin Jarek Garcia (Skoppiati)",
+        "nome_reale": "Lennin Jarek Garcia",
+        "squadra": "Skoppiati",
+        "categoria": "A1",
+        "punti_campionato": "81",
+        "prezzo": 27
+    },
+    {
+        "nome_display": "Giacomo Garzaro (Pazzeschi)",
+        "nome_reale": "Giacomo Garzaro",
+        "squadra": "Pazzeschi",
+        "categoria": "A1",
+        "punti_campionato": "81",
+        "prezzo": 26
+    },
+    {
+        "nome_display": "Roberto Riccio (Piccolo Club)",
+        "nome_reale": "Roberto Riccio",
+        "squadra": "Piccolo Club",
+        "categoria": "A1",
+        "punti_campionato": "81",
+        "prezzo": 25
+    },
+    {
+        "nome_display": "Giovanni Marsico (Skoppiati)",
+        "nome_reale": "Giovanni Marsico",
+        "squadra": "Skoppiati",
+        "categoria": "A1",
+        "punti_campionato": "79",
+        "prezzo": 24
+    },
+    {
+        "nome_display": "Alessandro Rigardo (Lab To Hit)",
+        "nome_reale": "Alessandro Rigardo",
+        "squadra": "Lab To Hit",
+        "categoria": "A1",
+        "punti_campionato": "79",
+        "prezzo": 23
+    },
+    {
+        "nome_display": "Federico Suppo (Skoppiati)",
+        "nome_reale": "Federico Suppo",
+        "squadra": "Skoppiati",
+        "categoria": "A1",
+        "punti_campionato": "73",
+        "prezzo": 22
+    },
+    {
+        "nome_display": "Filippo Venturini (Lab To Hit)",
+        "nome_reale": "Filippo Venturini",
+        "squadra": "Lab To Hit",
+        "categoria": "A1",
+        "punti_campionato": "69",
+        "prezzo": 21
+    },
+    {
+        "nome_display": "Enrico Salari (Flamurtari)",
+        "nome_reale": "Enrico Salari",
+        "squadra": "Flamurtari",
+        "categoria": "A1",
+        "punti_campionato": "59",
+        "prezzo": 20
+    },
+    {
+        "nome_display": "Danilo Sacchetto (Pazzeschi)",
+        "nome_reale": "Danilo Sacchetto",
+        "squadra": "Pazzeschi",
+        "categoria": "A1",
+        "punti_campionato": "55",
+        "prezzo": 19
+    },
+    {
+        "nome_display": "Marco Virgilio (Sunknights)",
+        "nome_reale": "Marco Virgilio",
+        "squadra": "Sunknights",
+        "categoria": "A1",
+        "punti_campionato": "50",
+        "prezzo": 18
+    },
+    {
+        "nome_display": "Daniele Gennaro (Red Devils)",
+        "nome_reale": "Daniele Gennaro",
+        "squadra": "Red Devils",
+        "categoria": "A1",
+        "punti_campionato": "42",
+        "prezzo": 17
+    },
+    {
+        "nome_display": "Lorenzo Fontana (Skoppiati)",
+        "nome_reale": "Lorenzo Fontana",
+        "squadra": "Skoppiati",
+        "categoria": "A1",
+        "punti_campionato": "31",
+        "prezzo": 16
+    },
+    {
+        "nome_display": "Alessandro Adami (Sunknights)",
+        "nome_reale": "Alessandro Adami",
+        "squadra": "Sunknights",
+        "categoria": "A1",
+        "punti_campionato": "30",
+        "prezzo": 15
+    },
+    {
+        "nome_display": "Marco  Zanatta (Flamurtari)",
+        "nome_reale": "Marco  Zanatta",
+        "squadra": "Flamurtari",
+        "categoria": "A1",
+        "punti_campionato": "27",
+        "prezzo": 14
+    },
+    {
+        "nome_display": "Leonardo Chiarella (Genova Hit Ball)",
+        "nome_reale": "Leonardo Chiarella",
+        "squadra": "Genova Hit Ball",
+        "categoria": "A1",
+        "punti_campionato": "26",
+        "prezzo": 13
+    },
+    {
+        "nome_display": "Giorgio Recalcati (Genova Hit Ball)",
+        "nome_reale": "Giorgio Recalcati",
+        "squadra": "Genova Hit Ball",
+        "categoria": "A1",
+        "punti_campionato": "26",
+        "prezzo": 12
+    },
+    {
+        "nome_display": "Enrico Spagnolini (Sunknights)",
+        "nome_reale": "Enrico Spagnolini",
+        "squadra": "Sunknights",
+        "categoria": "A1",
+        "punti_campionato": "23",
+        "prezzo": 11
+    },
+    {
+        "nome_display": "Daniele Managò (Flamurtari)",
+        "nome_reale": "Daniele Managò",
+        "squadra": "Flamurtari",
+        "categoria": "A1",
+        "punti_campionato": "14",
+        "prezzo": 10
+    },
+    {
+        "nome_display": "Matteo Clara (Sunknights)",
+        "nome_reale": "Matteo Clara",
+        "squadra": "Sunknights",
+        "categoria": "A1",
+        "punti_campionato": "13",
+        "prezzo": 9
+    },
+    {
+        "nome_display": "Angelo Zito (Flamurtari)",
+        "nome_reale": "Angelo Zito",
+        "squadra": "Flamurtari",
+        "categoria": "A1",
+        "punti_campionato": "0",
+        "prezzo": 5
+    },
+    {
+        "nome_display": "Federica Funnone (Flamurtari)",
+        "nome_reale": "Federica Funnone",
+        "squadra": "Flamurtari",
+        "categoria": "A1",
+        "punti_campionato": "7",
+        "prezzo": 18
+    },
+    {
+        "nome_display": "Martina Lupo (Sotomayor)",
+        "nome_reale": "Martina Lupo",
+        "squadra": "Sotomayor",
+        "categoria": "A1",
+        "punti_campionato": "2",
+        "prezzo": 8
+    },
+    {
+        "nome_display": "Jacopo Marchitelli (Trefferspan)",
+        "nome_reale": "Jacopo Marchitelli",
+        "squadra": "Trefferspan",
+        "categoria": "A2",
+        "punti_campionato": "460",
+        "prezzo": 115
+    },
+    {
+        "nome_display": "Gabriele Barone (Pellegrini Venaria)",
+        "nome_reale": "Gabriele Barone",
+        "squadra": "Pellegrini Venaria",
+        "categoria": "A2",
+        "punti_campionato": "336",
+        "prezzo": 92
+    },
+    {
+        "nome_display": "Luigi Ghirardi (Hocheti Pokety)",
+        "nome_reale": "Luigi Ghirardi",
+        "squadra": "Hocheti Pokety",
+        "categoria": "A2",
+        "punti_campionato": "327",
+        "prezzo": 90
+    },
+    {
+        "nome_display": "Stefano Benedetti (Sheet)",
+        "nome_reale": "Stefano Benedetti",
+        "squadra": "Sheet",
+        "categoria": "A2",
+        "punti_campionato": "300",
+        "prezzo": 88
+    },
+    {
+        "nome_display": "Alessandro Varetto (Black Knights)",
+        "nome_reale": "Alessandro Varetto",
+        "squadra": "Black Knights",
+        "categoria": "A2",
+        "punti_campionato": "293",
+        "prezzo": 86
+    },
+    {
+        "nome_display": "Gianluca Martinelli (Hammers)",
+        "nome_reale": "Gianluca Martinelli",
+        "squadra": "Hammers",
+        "categoria": "A2",
+        "punti_campionato": "282",
+        "prezzo": 84
+    },
+    {
+        "nome_display": "Marco Salusso (Sheet)",
+        "nome_reale": "Marco Salusso",
+        "squadra": "Sheet",
+        "categoria": "A2",
+        "punti_campionato": "281",
+        "prezzo": 82
+    },
+    {
+        "nome_display": "Alberto Casalegno (Pellegrini Venaria)",
+        "nome_reale": "Alberto Casalegno",
+        "squadra": "Pellegrini Venaria",
+        "categoria": "A2",
+        "punti_campionato": "280",
+        "prezzo": 81
+    },
+    {
+        "nome_display": "Ramon Rutigliano (Hocheti Pokety)",
+        "nome_reale": "Ramon Rutigliano",
+        "squadra": "Hocheti Pokety",
+        "categoria": "A2",
+        "punti_campionato": "273",
+        "prezzo": 80
+    },
+    {
+        "nome_display": "Paul Mihei (Bioghettyson)",
+        "nome_reale": "Paul Mihei",
+        "squadra": "Bioghettyson",
+        "categoria": "A2",
+        "punti_campionato": "267",
+        "prezzo": 78
+    },
+    {
+        "nome_display": "Luca Mocciaro (Pellegrini Venaria)",
+        "nome_reale": "Luca Mocciaro",
+        "squadra": "Pellegrini Venaria",
+        "categoria": "A2",
+        "punti_campionato": "251",
+        "prezzo": 76
+    },
+    {
+        "nome_display": "Emiliano Travaglini (Bioghettyson)",
+        "nome_reale": "Emiliano Travaglini",
+        "squadra": "Bioghettyson",
+        "categoria": "A2",
+        "punti_campionato": "236",
+        "prezzo": 74
+    },
+    {
+        "nome_display": "Lorenzo De Nicola Civitarese (Black Knights)",
+        "nome_reale": "Lorenzo De Nicola Civitarese",
+        "squadra": "Black Knights",
+        "categoria": "A2",
+        "punti_campionato": "234",
+        "prezzo": 73
+    },
+    {
+        "nome_display": "Marcello Bacchini (All Blacks)",
+        "nome_reale": "Marcello Bacchini",
+        "squadra": "All Blacks",
+        "categoria": "A2",
+        "punti_campionato": "233",
+        "prezzo": 72
+    },
+    {
+        "nome_display": "Gianluca Zanetti (Igadan)",
+        "nome_reale": "Gianluca Zanetti",
+        "squadra": "Igadan",
+        "categoria": "A2",
+        "punti_campionato": "221",
+        "prezzo": 70
+    },
+    {
+        "nome_display": "Alberto Racco (Hocheti Pokety)",
+        "nome_reale": "Alberto Racco",
+        "squadra": "Hocheti Pokety",
+        "categoria": "A2",
+        "punti_campionato": "214",
+        "prezzo": 69
+    },
+    {
+        "nome_display": "Giovanni Marino (Hammers)",
+        "nome_reale": "Giovanni Marino",
+        "squadra": "Hammers",
+        "categoria": "A2",
+        "punti_campionato": "211",
+        "prezzo": 68
+    },
+    {
+        "nome_display": "Giulio Cocirio (Trefferspan)",
+        "nome_reale": "Giulio Cocirio",
+        "squadra": "Trefferspan",
+        "categoria": "A2",
+        "punti_campionato": "204",
+        "prezzo": 67
+    },
+    {
+        "nome_display": "Matteo Vanni (Black Knights)",
+        "nome_reale": "Matteo Vanni",
+        "squadra": "Black Knights",
+        "categoria": "A2",
+        "punti_campionato": "197",
+        "prezzo": 66
+    },
+    {
+        "nome_display": "Francesco Caligaris (All Blacks)",
+        "nome_reale": "Francesco Caligaris",
+        "squadra": "All Blacks",
+        "categoria": "A2",
+        "punti_campionato": "195",
+        "prezzo": 65
+    },
+    {
+        "nome_display": "Simone De Meo (Hocheti Pokety)",
+        "nome_reale": "Simone De Meo",
+        "squadra": "Hocheti Pokety",
+        "categoria": "A2",
+        "punti_campionato": "190",
+        "prezzo": 64
+    },
+    {
+        "nome_display": "Alessandro Bruno (Bioghettyson)",
+        "nome_reale": "Alessandro Bruno",
+        "squadra": "Bioghettyson",
+        "categoria": "A2",
+        "punti_campionato": "181",
+        "prezzo": 63
+    },
+    {
+        "nome_display": "Tommaso Tomasina (Skunk Milano)",
+        "nome_reale": "Tommaso Tomasina",
+        "squadra": "Skunk Milano",
+        "categoria": "A2",
+        "punti_campionato": "179",
+        "prezzo": 62
+    },
+    {
+        "nome_display": "Edoardo Gladiali (Skunk Milano)",
+        "nome_reale": "Edoardo Gladiali",
+        "squadra": "Skunk Milano",
+        "categoria": "A2",
+        "punti_campionato": "176",
+        "prezzo": 61
+    },
+    {
+        "nome_display": "Diego Leonardi (All Blacks)",
+        "nome_reale": "Diego Leonardi",
+        "squadra": "All Blacks",
+        "categoria": "A2",
+        "punti_campionato": "174",
+        "prezzo": 60
+    },
+    {
+        "nome_display": "Luca Dragna (Pellegrini Venaria)",
+        "nome_reale": "Luca Dragna",
+        "squadra": "Pellegrini Venaria",
+        "categoria": "A2",
+        "punti_campionato": "174",
+        "prezzo": 59
+    },
+    {
+        "nome_display": "Federico Perno (All Blacks)",
+        "nome_reale": "Federico Perno",
+        "squadra": "All Blacks",
+        "categoria": "A2",
+        "punti_campionato": "173",
+        "prezzo": 58
+    },
+    {
+        "nome_display": "Fabio Bragagnolo (Black Knights)",
+        "nome_reale": "Fabio Bragagnolo",
+        "squadra": "Black Knights",
+        "categoria": "A2",
+        "punti_campionato": "168",
+        "prezzo": 57
+    },
+    {
+        "nome_display": "Andrea Vecchiattini (Igadan)",
+        "nome_reale": "Andrea Vecchiattini",
+        "squadra": "Igadan",
+        "categoria": "A2",
+        "punti_campionato": "162",
+        "prezzo": 56
+    },
+    {
+        "nome_display": "Andrea Giannitti (Igadan)",
+        "nome_reale": "Andrea Giannitti",
+        "squadra": "Igadan",
+        "categoria": "A2",
+        "punti_campionato": "162",
+        "prezzo": 55
+    },
+    {
+        "nome_display": "Gabriele Salerno (Trefferspan)",
+        "nome_reale": "Gabriele Salerno",
+        "squadra": "Trefferspan",
+        "categoria": "A2",
+        "punti_campionato": "161",
+        "prezzo": 54
+    },
+    {
+        "nome_display": "Gabriele Spina (Igadan)",
+        "nome_reale": "Gabriele Spina",
+        "squadra": "Igadan",
+        "categoria": "A2",
+        "punti_campionato": "156",
+        "prezzo": 53
+    },
+    {
+        "nome_display": "Enrico Truffa (Igadan)",
+        "nome_reale": "Enrico Truffa",
+        "squadra": "Igadan",
+        "categoria": "A2",
+        "punti_campionato": "155",
+        "prezzo": 52
+    },
+    {
+        "nome_display": "Andrea Lavalle (Sheet)",
+        "nome_reale": "Andrea Lavalle",
+        "squadra": "Sheet",
+        "categoria": "A2",
+        "punti_campionato": "155",
+        "prezzo": 51
+    },
+    {
+        "nome_display": "Domenico Pirozzolo (Pellegrini Venaria)",
+        "nome_reale": "Domenico Pirozzolo",
+        "squadra": "Pellegrini Venaria",
+        "categoria": "A2",
+        "punti_campionato": "152",
+        "prezzo": 50
+    },
+    {
+        "nome_display": "Andrea Giustetti (Sheet)",
+        "nome_reale": "Andrea Giustetti",
+        "squadra": "Sheet",
+        "categoria": "A2",
+        "punti_campionato": "149",
+        "prezzo": 49
+    },
+    {
+        "nome_display": "Alessandro Perrone (Skunk Milano)",
+        "nome_reale": "Alessandro Perrone",
+        "squadra": "Skunk Milano",
+        "categoria": "A2",
+        "punti_campionato": "144",
+        "prezzo": 48
+    },
+    {
+        "nome_display": "Alberto Maggia (Igadan)",
+        "nome_reale": "Alberto Maggia",
+        "squadra": "Igadan",
+        "categoria": "A2",
+        "punti_campionato": "138",
+        "prezzo": 47
+    },
+    {
+        "nome_display": "Stefano Braschi (Skunk Milano)",
+        "nome_reale": "Stefano Braschi",
+        "squadra": "Skunk Milano",
+        "categoria": "A2",
+        "punti_campionato": "135",
+        "prezzo": 46
+    },
+    {
+        "nome_display": "Carlo Pangallo (Sheet)",
+        "nome_reale": "Carlo Pangallo",
+        "squadra": "Sheet",
+        "categoria": "A2",
+        "punti_campionato": "134",
+        "prezzo": 45
+    },
+    {
+        "nome_display": "Marco Potenza (All Blacks)",
+        "nome_reale": "Marco Potenza",
+        "squadra": "All Blacks",
+        "categoria": "A2",
+        "punti_campionato": "133",
+        "prezzo": 44
+    },
+    {
+        "nome_display": "Davide Centin (Hammers)",
+        "nome_reale": "Davide Centin",
+        "squadra": "Hammers",
+        "categoria": "A2",
+        "punti_campionato": "130",
+        "prezzo": 43
+    },
+    {
+        "nome_display": "Alessandro Maniscalco (Igadan)",
+        "nome_reale": "Alessandro Maniscalco",
+        "squadra": "Igadan",
+        "categoria": "A2",
+        "punti_campionato": "125",
+        "prezzo": 42
+    },
+    {
+        "nome_display": "Patrick Marzano (All Blacks)",
+        "nome_reale": "Patrick Marzano",
+        "squadra": "All Blacks",
+        "categoria": "A2",
+        "punti_campionato": "124",
+        "prezzo": 41
+    },
+    {
+        "nome_display": "Ivan Russo (Hammers)",
+        "nome_reale": "Ivan Russo",
+        "squadra": "Hammers",
+        "categoria": "A2",
+        "punti_campionato": "117",
+        "prezzo": 40
+    },
+    {
+        "nome_display": "Salvatore Lo Monaco (Hammers)",
+        "nome_reale": "Salvatore Lo Monaco",
+        "squadra": "Hammers",
+        "categoria": "A2",
+        "punti_campionato": "113",
+        "prezzo": 39
+    },
+    {
+        "nome_display": "Francesco Colombo (Skunk Milano)",
+        "nome_reale": "Francesco Colombo",
+        "squadra": "Skunk Milano",
+        "categoria": "A2",
+        "punti_campionato": "111",
+        "prezzo": 38
+    },
+    {
+        "nome_display": "Gianluca Varetto (Black Knights)",
+        "nome_reale": "Gianluca Varetto",
+        "squadra": "Black Knights",
+        "categoria": "A2",
+        "punti_campionato": "109",
+        "prezzo": 37
+    },
+    {
+        "nome_display": "Gianluca Mondo (Sheet)",
+        "nome_reale": "Gianluca Mondo",
+        "squadra": "Sheet",
+        "categoria": "A2",
+        "punti_campionato": "104",
+        "prezzo": 36
+    },
+    {
+        "nome_display": "Marco Antinoro (Black Knights)",
+        "nome_reale": "Marco Antinoro",
+        "squadra": "Black Knights",
+        "categoria": "A2",
+        "punti_campionato": "102",
+        "prezzo": 35
+    },
+    {
+        "nome_display": "Fabrizio Gennaro (All Blacks)",
+        "nome_reale": "Fabrizio Gennaro",
+        "squadra": "All Blacks",
+        "categoria": "A2",
+        "punti_campionato": "94",
+        "prezzo": 34
+    },
+    {
+        "nome_display": "Simone Basano (Trefferspan)",
+        "nome_reale": "Simone Basano",
+        "squadra": "Trefferspan",
+        "categoria": "A2",
+        "punti_campionato": "90",
+        "prezzo": 33
+    },
+    {
+        "nome_display": "Andrea Tapella (Bioghettyson)",
+        "nome_reale": "Andrea Tapella",
+        "squadra": "Bioghettyson",
+        "categoria": "A2",
+        "punti_campionato": "86",
+        "prezzo": 32
+    },
+    {
+        "nome_display": "Marco Barrasso (Bioghettyson)",
+        "nome_reale": "Marco Barrasso",
+        "squadra": "Bioghettyson",
+        "categoria": "A2",
+        "punti_campionato": "85",
+        "prezzo": 31
+    },
+    {
+        "nome_display": "Stefano Truzzi (Sheet)",
+        "nome_reale": "Stefano Truzzi",
+        "squadra": "Sheet",
+        "categoria": "A2",
+        "punti_campionato": "82",
+        "prezzo": 30
+    },
+    {
+        "nome_display": "Fabio Ingrassia (Sheet)",
+        "nome_reale": "Fabio Ingrassia",
+        "squadra": "Sheet",
+        "categoria": "A2",
+        "punti_campionato": "82",
+        "prezzo": 29
+    },
+    {
+        "nome_display": "Massimo Sbano (Hammers)",
+        "nome_reale": "Massimo Sbano",
+        "squadra": "Hammers",
+        "categoria": "A2",
+        "punti_campionato": "82",
+        "prezzo": 28
+    },
+    {
+        "nome_display": "Davide Rivetti (Trefferspan)",
+        "nome_reale": "Davide Rivetti",
+        "squadra": "Trefferspan",
+        "categoria": "A2",
+        "punti_campionato": "74",
+        "prezzo": 27
+    },
+    {
+        "nome_display": "Tommaso Baudi Di Vesme Gabutti (Bioghettyson)",
+        "nome_reale": "Tommaso Baudi Di Vesme Gabutti",
+        "squadra": "Bioghettyson",
+        "categoria": "A2",
+        "punti_campionato": "72",
+        "prezzo": 26
+    },
+    {
+        "nome_display": "Samuel Maselli (Hocheti Pokety)",
+        "nome_reale": "Samuel Maselli",
+        "squadra": "Hocheti Pokety",
+        "categoria": "A2",
+        "punti_campionato": "70",
+        "prezzo": 25
+    },
+    {
+        "nome_display": "Matteo Folladori (Skunk Milano)",
+        "nome_reale": "Matteo Folladori",
+        "squadra": "Skunk Milano",
+        "categoria": "A2",
+        "punti_campionato": "62",
+        "prezzo": 24
+    },
+    {
+        "nome_display": "Gianluca Zingarelli (All Blacks)",
+        "nome_reale": "Gianluca Zingarelli",
+        "squadra": "All Blacks",
+        "categoria": "A2",
+        "punti_campionato": "62",
+        "prezzo": 23
+    },
+    {
+        "nome_display": "Francesco Croci (Trefferspan)",
+        "nome_reale": "Francesco Croci",
+        "squadra": "Trefferspan",
+        "categoria": "A2",
+        "punti_campionato": "61",
+        "prezzo": 22
+    },
+    {
+        "nome_display": "Matteo Galanti (Skunk Milano)",
+        "nome_reale": "Matteo Galanti",
+        "squadra": "Skunk Milano",
+        "categoria": "A2",
+        "punti_campionato": "54",
+        "prezzo": 21
+    },
+    {
+        "nome_display": "Lorenzo Zezza (Pellegrini Venaria)",
+        "nome_reale": "Lorenzo Zezza",
+        "squadra": "Pellegrini Venaria",
+        "categoria": "A2",
+        "punti_campionato": "45",
+        "prezzo": 20
+    },
+    {
+        "nome_display": "Francesco Mongiovì (Bioghettyson)",
+        "nome_reale": "Francesco Mongiovì",
+        "squadra": "Bioghettyson",
+        "categoria": "A2",
+        "punti_campionato": "41",
+        "prezzo": 19
+    },
+    {
+        "nome_display": "Massimiliano Casigli (Black Knights)",
+        "nome_reale": "Massimiliano Casigli",
+        "squadra": "Black Knights",
+        "categoria": "A2",
+        "punti_campionato": "34",
+        "prezzo": 18
+    },
+    {
+        "nome_display": "Lorenzo Novara (Hammers)",
+        "nome_reale": "Lorenzo Novara",
+        "squadra": "Hammers",
+        "categoria": "A2",
+        "punti_campionato": "33",
+        "prezzo": 17
+    },
+    {
+        "nome_display": "Andrea Garzena (Hocheti Pokety)",
+        "nome_reale": "Andrea Garzena",
+        "squadra": "Hocheti Pokety",
+        "categoria": "A2",
+        "punti_campionato": "29",
+        "prezzo": 16
+    },
+    {
+        "nome_display": "Francesco Rigoni (Bioghettyson)",
+        "nome_reale": "Francesco Rigoni",
+        "squadra": "Bioghettyson",
+        "categoria": "A2",
+        "punti_campionato": "24",
+        "prezzo": 15
+    },
+    {
+        "nome_display": "Nicol Sciretta (Pellegrini Venaria)",
+        "nome_reale": "Nicol Sciretta",
+        "squadra": "Pellegrini Venaria",
+        "categoria": "A2",
+        "punti_campionato": "19",
+        "prezzo": 14
+    },
+    {
+        "nome_display": "Daniele Demarchi (Sheet)",
+        "nome_reale": "Daniele Demarchi",
+        "squadra": "Sheet",
+        "categoria": "A2",
+        "punti_campionato": "18",
+        "prezzo": 13
+    },
+    {
+        "nome_display": "Simone Garino (Bioghettyson)",
+        "nome_reale": "Simone Garino",
+        "squadra": "Bioghettyson",
+        "categoria": "A2",
+        "punti_campionato": "6",
+        "prezzo": 12
+    },
+    {
+        "nome_display": "Andrea  Poso (Skunk Milano)",
+        "nome_reale": "Andrea  Poso",
+        "squadra": "Skunk Milano",
+        "categoria": "A2",
+        "punti_campionato": "6",
+        "prezzo": 10
+    },
+    {
+        "nome_display": "Michelangelo Lupo Benini (Skunk Milano)",
+        "nome_reale": "Michelangelo Lupo Benini",
+        "squadra": "Skunk Milano",
+        "categoria": "A2",
+        "punti_campionato": "0",
+        "prezzo": 8
+    },
+    {
+        "nome_display": "Federico Sisci (Pellegrini Venaria)",
+        "nome_reale": "Federico Sisci",
+        "squadra": "Pellegrini Venaria",
+        "categoria": "A2",
+        "punti_campionato": "0",
+        "prezzo": 5
+    },
+    {
+        "nome_display": "Sabrina Capitolo (Hammers)",
+        "nome_reale": "Sabrina Capitolo",
+        "squadra": "Hammers",
+        "categoria": "A2",
+        "punti_campionato": "23",
+        "prezzo": 17
+    },
+    {
+        "nome_display": "Riccardo Pajno Ferrara (Sporting Team Next Gen)",
+        "nome_reale": "Riccardo Pajno Ferrara",
+        "squadra": "Sporting Team Next Gen",
+        "categoria": "B1",
+        "punti_campionato": "432",
+        "prezzo": 85
+    },
+    {
+        "nome_display": "Federico Zoccarato (Nomadi Venaria)",
+        "nome_reale": "Federico Zoccarato",
+        "squadra": "Nomadi Venaria",
+        "categoria": "B1",
+        "punti_campionato": "377",
+        "prezzo": 82
+    },
+    {
+        "nome_display": "Giuseppe Armanno (Decepticon)",
+        "nome_reale": "Giuseppe Armanno",
+        "squadra": "Decepticon",
+        "categoria": "B1",
+        "punti_campionato": "361",
+        "prezzo": 80
+    },
+    {
+        "nome_display": "Nicolò Bonincontro (Hit Bulls)",
+        "nome_reale": "Nicolò Bonincontro",
+        "squadra": "Hit Bulls",
+        "categoria": "B1",
+        "punti_campionato": "303",
+        "prezzo": 78
+    },
+    {
+        "nome_display": "Rosso Paolo (Guardians Chivasso)",
+        "nome_reale": "Rosso Paolo",
+        "squadra": "Guardians Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "288",
+        "prezzo": 76
+    },
+    {
+        "nome_display": "Manuel Spatafora (Guardians Chivasso)",
+        "nome_reale": "Manuel Spatafora",
+        "squadra": "Guardians Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "272",
+        "prezzo": 75
+    },
+    {
+        "nome_display": "Stefano Santangelo (Torino Warriors)",
+        "nome_reale": "Stefano Santangelo",
+        "squadra": "Torino Warriors",
+        "categoria": "B1",
+        "punti_campionato": "260",
+        "prezzo": 74
+    },
+    {
+        "nome_display": "Matteo Amideo (Iron Lion Tyson)",
+        "nome_reale": "Matteo Amideo",
+        "squadra": "Iron Lion Tyson",
+        "categoria": "B1",
+        "punti_campionato": "258",
+        "prezzo": 73
+    },
+    {
+        "nome_display": "Pier Paolo Specchiulli (Hit Bulls)",
+        "nome_reale": "Pier Paolo Specchiulli",
+        "squadra": "Hit Bulls",
+        "categoria": "B1",
+        "punti_campionato": "257",
+        "prezzo": 72
+    },
+    {
+        "nome_display": "Mauro Pompili (Torino Warriors)",
+        "nome_reale": "Mauro Pompili",
+        "squadra": "Torino Warriors",
+        "categoria": "B1",
+        "punti_campionato": "245",
+        "prezzo": 71
+    },
+    {
+        "nome_display": "Davide Casalegno (Nomadi Venaria)",
+        "nome_reale": "Davide Casalegno",
+        "squadra": "Nomadi Venaria",
+        "categoria": "B1",
+        "punti_campionato": "238",
+        "prezzo": 70
+    },
+    {
+        "nome_display": "Edoardo Bruno (Iron Lion Tyson)",
+        "nome_reale": "Edoardo Bruno",
+        "squadra": "Iron Lion Tyson",
+        "categoria": "B1",
+        "punti_campionato": "236",
+        "prezzo": 69
+    },
+    {
+        "nome_display": "Marco Schiaroli (Dracarys Chivasso)",
+        "nome_reale": "Marco Schiaroli",
+        "squadra": "Dracarys Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "229",
+        "prezzo": 68
+    },
+    {
+        "nome_display": "Angelo D'Alessandra (Guardians Chivasso)",
+        "nome_reale": "Angelo D'Alessandra",
+        "squadra": "Guardians Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "227",
+        "prezzo": 67
+    },
+    {
+        "nome_display": "Paolo Guerra (Meatballs)",
+        "nome_reale": "Paolo Guerra",
+        "squadra": "Meatballs",
+        "categoria": "B1",
+        "punti_campionato": "223",
+        "prezzo": 66
+    },
+    {
+        "nome_display": "Francesco Dughera (Dracarys Chivasso)",
+        "nome_reale": "Francesco Dughera",
+        "squadra": "Dracarys Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "221",
+        "prezzo": 65
+    },
+    {
+        "nome_display": "Simone Abbona (Driphit)",
+        "nome_reale": "Simone Abbona",
+        "squadra": "Driphit",
+        "categoria": "B1",
+        "punti_campionato": "215",
+        "prezzo": 64
+    },
+    {
+        "nome_display": "John Gonzalo Robles Zavaleta (Iron Lion Tyson)",
+        "nome_reale": "John Gonzalo Robles Zavaleta",
+        "squadra": "Iron Lion Tyson",
+        "categoria": "B1",
+        "punti_campionato": "212",
+        "prezzo": 63
+    },
+    {
+        "nome_display": "Tommaso Faletti (Iron Lion Tyson)",
+        "nome_reale": "Tommaso Faletti",
+        "squadra": "Iron Lion Tyson",
+        "categoria": "B1",
+        "punti_campionato": "208",
+        "prezzo": 62
+    },
+    {
+        "nome_display": "Adriano Paribello Grasso (Dracarys Chivasso)",
+        "nome_reale": "Adriano Paribello Grasso",
+        "squadra": "Dracarys Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "207",
+        "prezzo": 61
+    },
+    {
+        "nome_display": "Alex Serratore (Sporting Team Next Gen)",
+        "nome_reale": "Alex Serratore",
+        "squadra": "Sporting Team Next Gen",
+        "categoria": "B1",
+        "punti_campionato": "202",
+        "prezzo": 60
+    },
+    {
+        "nome_display": "Andrea Brossa (Driphit)",
+        "nome_reale": "Andrea Brossa",
+        "squadra": "Driphit",
+        "categoria": "B1",
+        "punti_campionato": "192",
+        "prezzo": 58
+    },
+    {
+        "nome_display": "Massimiliano Taglianetti (Meatballs)",
+        "nome_reale": "Massimiliano Taglianetti",
+        "squadra": "Meatballs",
+        "categoria": "B1",
+        "punti_campionato": "191",
+        "prezzo": 59
+    },
+    {
+        "nome_display": "Franco Giambanco (Sporting Team Next Gen)",
+        "nome_reale": "Franco Giambanco",
+        "squadra": "Sporting Team Next Gen",
+        "categoria": "B1",
+        "punti_campionato": "177",
+        "prezzo": 57
+    },
+    {
+        "nome_display": "Flavio Caiano (Driphit)",
+        "nome_reale": "Flavio Caiano",
+        "squadra": "Driphit",
+        "categoria": "B1",
+        "punti_campionato": "174",
+        "prezzo": 50
+    },
+    {
+        "nome_display": "Benito Manuel Marino (Guardians Chivasso)",
+        "nome_reale": "Benito Manuel Marino",
+        "squadra": "Guardians Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "172",
+        "prezzo": 56
+    },
+    {
+        "nome_display": "Francesco De Gaetano (Torino Warriors)",
+        "nome_reale": "Francesco De Gaetano",
+        "squadra": "Torino Warriors",
+        "categoria": "B1",
+        "punti_campionato": "171",
+        "prezzo": 55
+    },
+    {
+        "nome_display": "Luca Curti (Nomadi Venaria)",
+        "nome_reale": "Luca Curti",
+        "squadra": "Nomadi Venaria",
+        "categoria": "B1",
+        "punti_campionato": "171",
+        "prezzo": 54
+    },
+    {
+        "nome_display": "Ivano Reato (Guardians Chivasso)",
+        "nome_reale": "Ivano Reato",
+        "squadra": "Guardians Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "168",
+        "prezzo": 53
+    },
+    {
+        "nome_display": "Alessandro Santomaggio (Decepticon)",
+        "nome_reale": "Alessandro Santomaggio",
+        "squadra": "Decepticon",
+        "categoria": "B1",
+        "punti_campionato": "164",
+        "prezzo": 39
+    },
+    {
+        "nome_display": "Riccardo Toppan (Decepticon)",
+        "nome_reale": "Riccardo Toppan",
+        "squadra": "Decepticon",
+        "categoria": "B1",
+        "punti_campionato": "164",
+        "prezzo": 47
+    },
+    {
+        "nome_display": "Davide Martini (Dracarys Chivasso)",
+        "nome_reale": "Davide Martini",
+        "squadra": "Dracarys Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "161",
+        "prezzo": 52
+    },
+    {
+        "nome_display": "Jacopo Sanfilippo (Torino Warriors)",
+        "nome_reale": "Jacopo Sanfilippo",
+        "squadra": "Torino Warriors",
+        "categoria": "B1",
+        "punti_campionato": "160",
+        "prezzo": 51
+    },
+    {
+        "nome_display": "Andrea De Blasio (Meatballs)",
+        "nome_reale": "Andrea De Blasio",
+        "squadra": "Meatballs",
+        "categoria": "B1",
+        "punti_campionato": "160",
+        "prezzo": 49
+    },
+    {
+        "nome_display": "Federico Gennaro (Guardians Chivasso)",
+        "nome_reale": "Federico Gennaro",
+        "squadra": "Guardians Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "158",
+        "prezzo": 48
+    },
+    {
+        "nome_display": "Marcello Saporito (Guardians Chivasso)",
+        "nome_reale": "Marcello Saporito",
+        "squadra": "Guardians Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "153",
+        "prezzo": 46
+    },
+    {
+        "nome_display": "Federico Tibaldi (Hit Bulls)",
+        "nome_reale": "Federico Tibaldi",
+        "squadra": "Hit Bulls",
+        "categoria": "B1",
+        "punti_campionato": "151",
+        "prezzo": 45
+    },
+    {
+        "nome_display": "Federico Solinas (Torino Warriors)",
+        "nome_reale": "Federico Solinas",
+        "squadra": "Torino Warriors",
+        "categoria": "B1",
+        "punti_campionato": "151",
+        "prezzo": 44
+    },
+    {
+        "nome_display": "Simone Guglielmetto (Decepticon)",
+        "nome_reale": "Simone Guglielmetto",
+        "squadra": "Decepticon",
+        "categoria": "B1",
+        "punti_campionato": "151",
+        "prezzo": 38
+    },
+    {
+        "nome_display": "Marco Gamba (Torino Warriors)",
+        "nome_reale": "Marco Gamba",
+        "squadra": "Torino Warriors",
+        "categoria": "B1",
+        "punti_campionato": "146",
+        "prezzo": 43
+    },
+    {
+        "nome_display": "Alessandro Rolino (Nomadi Venaria)",
+        "nome_reale": "Alessandro Rolino",
+        "squadra": "Nomadi Venaria",
+        "categoria": "B1",
+        "punti_campionato": "145",
+        "prezzo": 42
+    },
+    {
+        "nome_display": "Antonio Marincola (Sporting Team Next Gen)",
+        "nome_reale": "Antonio Marincola",
+        "squadra": "Sporting Team Next Gen",
+        "categoria": "B1",
+        "punti_campionato": "144",
+        "prezzo": 41
+    },
+    {
+        "nome_display": "Davide Pivato (Torino Warriors)",
+        "nome_reale": "Davide Pivato",
+        "squadra": "Torino Warriors",
+        "categoria": "B1",
+        "punti_campionato": "144",
+        "prezzo": 40
+    },
+    {
+        "nome_display": "Justin Ossai (Meatballs)",
+        "nome_reale": "Justin Ossai",
+        "squadra": "Meatballs",
+        "categoria": "B1",
+        "punti_campionato": "137",
+        "prezzo": 37
+    },
+    {
+        "nome_display": "Luca Cavaglià (Decepticon)",
+        "nome_reale": "Luca Cavaglià",
+        "squadra": "Decepticon",
+        "categoria": "B1",
+        "punti_campionato": "135",
+        "prezzo": 36
+    },
+    {
+        "nome_display": "Nicolò Negrini (Hit Bulls)",
+        "nome_reale": "Nicolò Negrini",
+        "squadra": "Hit Bulls",
+        "categoria": "B1",
+        "punti_campionato": "127",
+        "prezzo": 35
+    },
+    {
+        "nome_display": "Alberto Gabriolo (Hit Bulls)",
+        "nome_reale": "Alberto Gabriolo",
+        "squadra": "Hit Bulls",
+        "categoria": "B1",
+        "punti_campionato": "109",
+        "prezzo": 34
+    },
+    {
+        "nome_display": "Kevin Calvo (Hit Bulls)",
+        "nome_reale": "Kevin Calvo",
+        "squadra": "Hit Bulls",
+        "categoria": "B1",
+        "punti_campionato": "104",
+        "prezzo": 33
+    },
+    {
+        "nome_display": "Simone Mazza (Driphit)",
+        "nome_reale": "Simone Mazza",
+        "squadra": "Driphit",
+        "categoria": "B1",
+        "punti_campionato": "104",
+        "prezzo": 29
+    },
+    {
+        "nome_display": "Simone Marcarino (Iron Lion Tyson)",
+        "nome_reale": "Simone Marcarino",
+        "squadra": "Iron Lion Tyson",
+        "categoria": "B1",
+        "punti_campionato": "103",
+        "prezzo": 32
+    },
+    {
+        "nome_display": "Pietro Magrì (Dracarys Chivasso)",
+        "nome_reale": "Pietro Magrì",
+        "squadra": "Dracarys Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "98",
+        "prezzo": 31
+    },
+    {
+        "nome_display": "Mattia  Bucci (Nomadi Venaria)",
+        "nome_reale": "Mattia  Bucci",
+        "squadra": "Nomadi Venaria",
+        "categoria": "B1",
+        "punti_campionato": "96",
+        "prezzo": 30
+    },
+    {
+        "nome_display": "Christian Alescio (Nomadi Venaria)",
+        "nome_reale": "Christian Alescio",
+        "squadra": "Nomadi Venaria",
+        "categoria": "B1",
+        "punti_campionato": "91",
+        "prezzo": 28
+    },
+    {
+        "nome_display": "Marco Rizzo (Iron Lion Tyson)",
+        "nome_reale": "Marco Rizzo",
+        "squadra": "Iron Lion Tyson",
+        "categoria": "B1",
+        "punti_campionato": "88",
+        "prezzo": 27
+    },
+    {
+        "nome_display": "Matteo Roma (Dracarys Chivasso)",
+        "nome_reale": "Matteo Roma",
+        "squadra": "Dracarys Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "84",
+        "prezzo": 26
+    },
+    {
+        "nome_display": "Mauro Mola (Meatballs)",
+        "nome_reale": "Mauro Mola",
+        "squadra": "Meatballs",
+        "categoria": "B1",
+        "punti_campionato": "82",
+        "prezzo": 25
+    },
+    {
+        "nome_display": "Federico Listello (Meatballs)",
+        "nome_reale": "Federico Listello",
+        "squadra": "Meatballs",
+        "categoria": "B1",
+        "punti_campionato": "78",
+        "prezzo": 24
+    },
+    {
+        "nome_display": "Daniele Barbato (Decepticon)",
+        "nome_reale": "Daniele Barbato",
+        "squadra": "Decepticon",
+        "categoria": "B1",
+        "punti_campionato": "69",
+        "prezzo": 21
+    },
+    {
+        "nome_display": "Samuele Dogliani (Iron Lion Tyson)",
+        "nome_reale": "Samuele Dogliani",
+        "squadra": "Iron Lion Tyson",
+        "categoria": "B1",
+        "punti_campionato": "63",
+        "prezzo": 23
+    },
+    {
+        "nome_display": "Emanuele Filiberto Pellegrin (Dracarys Chivasso)",
+        "nome_reale": "Emanuele Filiberto Pellegrin",
+        "squadra": "Dracarys Chivasso",
+        "categoria": "B1",
+        "punti_campionato": "62",
+        "prezzo": 22
+    },
+    {
+        "nome_display": "Mattia Maggio (Driphit)",
+        "nome_reale": "Mattia Maggio",
+        "squadra": "Driphit",
+        "categoria": "B1",
+        "punti_campionato": "56",
+        "prezzo": 19
+    },
+    {
+        "nome_display": "Carlo Del console (Sporting Team Next Gen)",
+        "nome_reale": "Carlo Del console",
+        "squadra": "Sporting Team Next Gen",
+        "categoria": "B1",
+        "punti_campionato": "54",
+        "prezzo": 20
+    },
+    {
+        "nome_display": "Fabrizio Alberto (Torino Warriors)",
+        "nome_reale": "Fabrizio Alberto",
+        "squadra": "Torino Warriors",
+        "categoria": "B1",
+        "punti_campionato": "41",
+        "prezzo": 18
+    },
+    {
+        "nome_display": "Dante Accarini (Driphit)",
+        "nome_reale": "Dante Accarini",
+        "squadra": "Driphit",
+        "categoria": "B1",
+        "punti_campionato": "38",
+        "prezzo": 16
+    },
+    {
+        "nome_display": "Rocco Barbaro (Iron Lion Tyson)",
+        "nome_reale": "Rocco Barbaro",
+        "squadra": "Iron Lion Tyson",
+        "categoria": "B1",
+        "punti_campionato": "33",
+        "prezzo": 17
+    },
+    {
+        "nome_display": "Stefano Bollito (Sporting Team Next Gen)",
+        "nome_reale": "Stefano Bollito",
+        "squadra": "Sporting Team Next Gen",
+        "categoria": "B1",
+        "punti_campionato": "31",
+        "prezzo": 15
+    },
+    {
+        "nome_display": "Alessandro Maggio (Driphit)",
+        "nome_reale": "Alessandro Maggio",
+        "squadra": "Driphit",
+        "categoria": "B1",
+        "punti_campionato": "30",
+        "prezzo": 14
+    },
+    {
+        "nome_display": "Antonio D'Elicio (Torino Warriors)",
+        "nome_reale": "Antonio D'Elicio",
+        "squadra": "Torino Warriors",
+        "categoria": "B1",
+        "punti_campionato": "25",
+        "prezzo": 13
+    },
+    {
+        "nome_display": "Stefano Lavino (Decepticon)",
+        "nome_reale": "Stefano Lavino",
+        "squadra": "Decepticon",
+        "categoria": "B1",
+        "punti_campionato": "24",
+        "prezzo": 12
+    },
+    {
+        "nome_display": "Valerio Ianniello (Hit Bulls)",
+        "nome_reale": "Valerio Ianniello",
+        "squadra": "Hit Bulls",
+        "categoria": "B1",
+        "punti_campionato": "18",
+        "prezzo": 11
+    },
+    {
+        "nome_display": "Marco Lorandi (Meatballs)",
+        "nome_reale": "Marco Lorandi",
+        "squadra": "Meatballs",
+        "categoria": "B1",
+        "punti_campionato": "17",
+        "prezzo": 10
+    },
+    {
+        "nome_display": "Riccardo Santoro (Nomadi Venaria)",
+        "nome_reale": "Riccardo Santoro",
+        "squadra": "Nomadi Venaria",
+        "categoria": "B1",
+        "punti_campionato": "8",
+        "prezzo": 9
+    },
+    {
+        "nome_display": "Stefano Borelli (Torino Warriors)",
+        "nome_reale": "Stefano Borelli",
+        "squadra": "Torino Warriors",
+        "categoria": "B1",
+        "punti_campionato": "0",
+        "prezzo": 5
+    },
+    {
+        "nome_display": "Vincenzo Padula (Sporting Team Next Gen)",
+        "nome_reale": "Vincenzo Padula",
+        "squadra": "Sporting Team Next Gen",
+        "categoria": "B1",
+        "punti_campionato": "0",
+        "prezzo": 5
+    },
+    {
+        "nome_display": "Arianna Vismara (Sporting Team Next Gen)",
+        "nome_reale": "Arianna Vismara",
+        "squadra": "Sporting Team Next Gen",
+        "categoria": "B1",
+        "punti_campionato": "72",
+        "prezzo": 28
+    },
+    {
+        "nome_display": "Sabrina Zanfretta (Nomadi Venaria)",
+        "nome_reale": "Sabrina Zanfretta",
+        "squadra": "Nomadi Venaria",
+        "categoria": "B1",
+        "punti_campionato": "51",
+        "prezzo": 24
+    },
+    {
+        "nome_display": "Sara Sottolano (Meatballs)",
+        "nome_reale": "Sara Sottolano",
+        "squadra": "Meatballs",
+        "categoria": "B1",
+        "punti_campionato": "14",
+        "prezzo": 12
+    },
+    {
+        "nome_display": "Martina Bracesco (Nomadi Venaria)",
+        "nome_reale": "Martina Bracesco",
+        "squadra": "Nomadi Venaria",
+        "categoria": "B1",
+        "punti_campionato": "0",
+        "prezzo": 5
+    },
+    {
+        "nome_display": "Rossella De Blasio (Meatballs)",
+        "nome_reale": "Rossella De Blasio",
+        "squadra": "Meatballs",
+        "categoria": "B1",
+        "punti_campionato": "0",
+        "prezzo": 5
+    },
+    {
+        "nome_display": "Mattia Borca (Monstars)",
+        "nome_reale": "Mattia Borca",
+        "squadra": "Monstars",
+        "categoria": "B2",
+        "punti_campionato": "407",
+        "prezzo": 60
+    },
+    {
+        "nome_display": "Gaetano Rendine (Homeless)",
+        "nome_reale": "Gaetano Rendine",
+        "squadra": "Homeless",
+        "categoria": "B2",
+        "punti_campionato": "380",
+        "prezzo": 58
+    },
+    {
+        "nome_display": "Paolo Lamberti (Delirium Consulum)",
+        "nome_reale": "Paolo Lamberti",
+        "squadra": "Delirium Consulum",
+        "categoria": "B2",
+        "punti_campionato": "374",
+        "prezzo": 57
+    },
+    {
+        "nome_display": "Nicolò Signorini (Krakens Chivasso)",
+        "nome_reale": "Nicolò Signorini",
+        "squadra": "Krakens Chivasso",
+        "categoria": "B2",
+        "punti_campionato": "355",
+        "prezzo": 56
+    },
+    {
+        "nome_display": "Andrea Merlo (Homeless)",
+        "nome_reale": "Andrea Merlo",
+        "squadra": "Homeless",
+        "categoria": "B2",
+        "punti_campionato": "319",
+        "prezzo": 55
+    },
+    {
+        "nome_display": "Lorenzo Lombardo (Monstars)",
+        "nome_reale": "Lorenzo Lombardo",
+        "squadra": "Monstars",
+        "categoria": "B2",
+        "punti_campionato": "290",
+        "prezzo": 54
+    },
+    {
+        "nome_display": "Gioele Rossi (Spartak)",
+        "nome_reale": "Gioele Rossi",
+        "squadra": "Spartak",
+        "categoria": "B2",
+        "punti_campionato": "280",
+        "prezzo": 53
+    },
+    {
+        "nome_display": "Dino Pagano (Delirium Consulum)",
+        "nome_reale": "Dino Pagano",
+        "squadra": "Delirium Consulum",
+        "categoria": "B2",
+        "punti_campionato": "279",
+        "prezzo": 52
+    },
+    {
+        "nome_display": "Renato Dalle Mura (Delirium Consulum)",
+        "nome_reale": "Renato Dalle Mura",
+        "squadra": "Delirium Consulum",
+        "categoria": "B2",
+        "punti_campionato": "268",
+        "prezzo": 51
+    },
+    {
+        "nome_display": "Gioele Alesina (Krakens Chivasso)",
+        "nome_reale": "Gioele Alesina",
+        "squadra": "Krakens Chivasso",
+        "categoria": "B2",
+        "punti_campionato": "263",
+        "prezzo": 50
+    },
+    {
+        "nome_display": "Simone Gasbarroni (Hitbusters)",
+        "nome_reale": "Simone Gasbarroni",
+        "squadra": "Hitbusters",
+        "categoria": "B2",
+        "punti_campionato": "259",
+        "prezzo": 49
+    },
+    {
+        "nome_display": "Daniele Ponte (Valhalla)",
+        "nome_reale": "Daniele Ponte",
+        "squadra": "Valhalla",
+        "categoria": "B2",
+        "punti_campionato": "252",
+        "prezzo": 48
+    },
+    {
+        "nome_display": "Lorenzo Bellino (Spartak)",
+        "nome_reale": "Lorenzo Bellino",
+        "squadra": "Spartak",
+        "categoria": "B2",
+        "punti_campionato": "252",
+        "prezzo": 47
+    },
+    {
+        "nome_display": "Gianluca Sabatino (Together Hit)",
+        "nome_reale": "Gianluca Sabatino",
+        "squadra": "Together Hit",
+        "categoria": "B2",
+        "punti_campionato": "247",
+        "prezzo": 46
+    },
+    {
+        "nome_display": "Stefano Incorvaia (Atletico Boomers)",
+        "nome_reale": "Stefano Incorvaia",
+        "squadra": "Atletico Boomers",
+        "categoria": "B2",
+        "punti_campionato": "237",
+        "prezzo": 45
+    },
+    {
+        "nome_display": "Luca Maria Mercurio (Hitbusters)",
+        "nome_reale": "Luca Maria Mercurio",
+        "squadra": "Hitbusters",
+        "categoria": "B2",
+        "punti_campionato": "230",
+        "prezzo": 44
+    },
+    {
+        "nome_display": "Daniele Tessarin (Hitbusters)",
+        "nome_reale": "Daniele Tessarin",
+        "squadra": "Hitbusters",
+        "categoria": "B2",
+        "punti_campionato": "209",
+        "prezzo": 43
+    },
+    {
+        "nome_display": "Stefano Mazzilli (Together Hit)",
+        "nome_reale": "Stefano Mazzilli",
+        "squadra": "Together Hit",
+        "categoria": "B2",
+        "punti_campionato": "205",
+        "prezzo": 42
+    },
+    {
+        "nome_display": "Giacomo Guarrato (Atletico Boomers)",
+        "nome_reale": "Giacomo Guarrato",
+        "squadra": "Atletico Boomers",
+        "categoria": "B2",
+        "punti_campionato": "204",
+        "prezzo": 41
+    },
+    {
+        "nome_display": "Samuele Carnelli (Jedi Knights)",
+        "nome_reale": "Samuele Carnelli",
+        "squadra": "Jedi Knights",
+        "categoria": "B2",
+        "punti_campionato": "193",
+        "prezzo": 40
+    },
+    {
+        "nome_display": "Francesco Cissello (Together Hit)",
+        "nome_reale": "Francesco Cissello",
+        "squadra": "Together Hit",
+        "categoria": "B2",
+        "punti_campionato": "188",
+        "prezzo": 39
+    },
+    {
+        "nome_display": "Roberto Pirrotta (Atletico Boomers)",
+        "nome_reale": "Roberto Pirrotta",
+        "squadra": "Atletico Boomers",
+        "categoria": "B2",
+        "punti_campionato": "186",
+        "prezzo": 38
+    },
+    {
+        "nome_display": "Alessandro Caivano (Hitbusters)",
+        "nome_reale": "Alessandro Caivano",
+        "squadra": "Hitbusters",
+        "categoria": "B2",
+        "punti_campionato": "179",
+        "prezzo": 37
+    },
+    {
+        "nome_display": "Mattia Valetti (Jedi Knights)",
+        "nome_reale": "Mattia Valetti",
+        "squadra": "Jedi Knights",
+        "categoria": "B2",
+        "punti_campionato": "164",
+        "prezzo": 36
+    },
+    {
+        "nome_display": "Andrea Vitale (Hitbusters)",
+        "nome_reale": "Andrea Vitale",
+        "squadra": "Hitbusters",
+        "categoria": "B2",
+        "punti_campionato": "164",
+        "prezzo": 35
+    },
+    {
+        "nome_display": "Andrea Brocchetta (Monstars)",
+        "nome_reale": "Andrea Brocchetta",
+        "squadra": "Monstars",
+        "categoria": "B2",
+        "punti_campionato": "162",
+        "prezzo": 34
+    },
+    {
+        "nome_display": "Daniele Nemo Busato (Valhalla)",
+        "nome_reale": "Daniele Nemo Busato",
+        "squadra": "Valhalla",
+        "categoria": "B2",
+        "punti_campionato": "161",
+        "prezzo": 33
+    },
+    {
+        "nome_display": "Franco Augustin Signori (Krakens Chivasso)",
+        "nome_reale": "Franco Augustin Signori",
+        "squadra": "Krakens Chivasso",
+        "categoria": "B2",
+        "punti_campionato": "156",
+        "prezzo": 32
+    },
+    {
+        "nome_display": "Davide Costantin Grigoras (Spartak)",
+        "nome_reale": "Davide Costantin Grigoras",
+        "squadra": "Spartak",
+        "categoria": "B2",
+        "punti_campionato": "143",
+        "prezzo": 31
+    },
+    {
+        "nome_display": "Andrea Crovagna (Together Hit)",
+        "nome_reale": "Andrea Crovagna",
+        "squadra": "Together Hit",
+        "categoria": "B2",
+        "punti_campionato": "142",
+        "prezzo": 30
+    },
+    {
+        "nome_display": "Davide Baldus (Homeless)",
+        "nome_reale": "Davide Baldus",
+        "squadra": "Homeless",
+        "categoria": "B2",
+        "punti_campionato": "141",
+        "prezzo": 29
+    },
+    {
+        "nome_display": "Tommaso Giuliani (Jedi Knights)",
+        "nome_reale": "Tommaso Giuliani",
+        "squadra": "Jedi Knights",
+        "categoria": "B2",
+        "punti_campionato": "136",
+        "prezzo": 28
+    },
+    {
+        "nome_display": "Giovanni Aquila (Homeless)",
+        "nome_reale": "Giovanni Aquila",
+        "squadra": "Homeless",
+        "categoria": "B2",
+        "punti_campionato": "135",
+        "prezzo": 27
+    },
+    {
+        "nome_display": "Gaetano De Vaire (Jedi Knights)",
+        "nome_reale": "Gaetano De Vaire",
+        "squadra": "Jedi Knights",
+        "categoria": "B2",
+        "punti_campionato": "132",
+        "prezzo": 26
+    },
+    {
+        "nome_display": "Thomas Gandolfi (Jedi Knights)",
+        "nome_reale": "Thomas Gandolfi",
+        "squadra": "Jedi Knights",
+        "categoria": "B2",
+        "punti_campionato": "130",
+        "prezzo": 25
+    },
+    {
+        "nome_display": "Lorenzo Marchitelli (Valhalla)",
+        "nome_reale": "Lorenzo Marchitelli",
+        "squadra": "Valhalla",
+        "categoria": "B2",
+        "punti_campionato": "129",
+        "prezzo": 24
+    },
+    {
+        "nome_display": "Lorenzo Lamberti (Atletico Boomers)",
+        "nome_reale": "Lorenzo Lamberti",
+        "squadra": "Atletico Boomers",
+        "categoria": "B2",
+        "punti_campionato": "125",
+        "prezzo": 23
+    },
+    {
+        "nome_display": "Federico D'Urzo (Atletico Boomers)",
+        "nome_reale": "Federico D'Urzo",
+        "squadra": "Atletico Boomers",
+        "categoria": "B2",
+        "punti_campionato": "116",
+        "prezzo": 22
+    },
+    {
+        "nome_display": "Marco Bassetti (Valhalla)",
+        "nome_reale": "Marco Bassetti",
+        "squadra": "Valhalla",
+        "categoria": "B2",
+        "punti_campionato": "112",
+        "prezzo": 21
+    },
+    {
+        "nome_display": "Yuki Galano (Valhalla)",
+        "nome_reale": "Yuki Galano",
+        "squadra": "Valhalla",
+        "categoria": "B2",
+        "punti_campionato": "109",
+        "prezzo": 20
+    },
+    {
+        "nome_display": "Mattia Allemano (Jedi Knights)",
+        "nome_reale": "Mattia Allemano",
+        "squadra": "Jedi Knights",
+        "categoria": "B2",
+        "punti_campionato": "103",
+        "prezzo": 20
+    },
+    {
+        "nome_display": "Vincenzo De Felice (Atletico Boomers)",
+        "nome_reale": "Vincenzo De Felice",
+        "squadra": "Atletico Boomers",
+        "categoria": "B2",
+        "punti_campionato": "98",
+        "prezzo": 19
+    },
+    {
+        "nome_display": "Francesco  Ghio (Krakens Chivasso)",
+        "nome_reale": "Francesco  Ghio",
+        "squadra": "Krakens Chivasso",
+        "categoria": "B2",
+        "punti_campionato": "94",
+        "prezzo": 19
+    },
+    {
+        "nome_display": "Mattia Calvio (Krakens Chivasso)",
+        "nome_reale": "Mattia Calvio",
+        "squadra": "Krakens Chivasso",
+        "categoria": "B2",
+        "punti_campionato": "87",
+        "prezzo": 18
+    },
+    {
+        "nome_display": "Manuel De Rosa (Spartak)",
+        "nome_reale": "Manuel De Rosa",
+        "squadra": "Spartak",
+        "categoria": "B2",
+        "punti_campionato": "83",
+        "prezzo": 18
+    },
+    {
+        "nome_display": "Riccardo Ajassa (Hitbusters)",
+        "nome_reale": "Riccardo Ajassa",
+        "squadra": "Hitbusters",
+        "categoria": "B2",
+        "punti_campionato": "82",
+        "prezzo": 17
+    },
+    {
+        "nome_display": "Gianluca Minuto (Delirium Consulum)",
+        "nome_reale": "Gianluca Minuto",
+        "squadra": "Delirium Consulum",
+        "categoria": "B2",
+        "punti_campionato": "77",
+        "prezzo": 17
+    },
+    {
+        "nome_display": "Pietro Chevallard (Delirium Consulum)",
+        "nome_reale": "Pietro Chevallard",
+        "squadra": "Delirium Consulum",
+        "categoria": "B2",
+        "punti_campionato": "73",
+        "prezzo": 16
+    },
+    {
+        "nome_display": "Riccardo Daniele (Spartak)",
+        "nome_reale": "Riccardo Daniele",
+        "squadra": "Spartak",
+        "categoria": "B2",
+        "punti_campionato": "71",
+        "prezzo": 16
+    },
+    {
+        "nome_display": "Daniele Cecconata (Monstars)",
+        "nome_reale": "Daniele Cecconata",
+        "squadra": "Monstars",
+        "categoria": "B2",
+        "punti_campionato": "70",
+        "prezzo": 15
+    },
+    {
+        "nome_display": "Mauro Maria Pittavino (Together Hit)",
+        "nome_reale": "Mauro Maria Pittavino",
+        "squadra": "Together Hit",
+        "categoria": "B2",
+        "punti_campionato": "67",
+        "prezzo": 15
+    },
+    {
+        "nome_display": "Francesco Signorini (Krakens Chivasso)",
+        "nome_reale": "Francesco Signorini",
+        "squadra": "Krakens Chivasso",
+        "categoria": "B2",
+        "punti_campionato": "67",
+        "prezzo": 14
+    },
+    {
+        "nome_display": "Davide Garibaldi (Jedi Knights)",
+        "nome_reale": "Davide Garibaldi",
+        "squadra": "Jedi Knights",
+        "categoria": "B2",
+        "punti_campionato": "66",
+        "prezzo": 14
+    },
+    {
+        "nome_display": "Fabio Pascoli (Spartak)",
+        "nome_reale": "Fabio Pascoli",
+        "squadra": "Spartak",
+        "categoria": "B2",
+        "punti_campionato": "64",
+        "prezzo": 13
+    },
+    {
+        "nome_display": "Pierluigi Marchisio (Homeless)",
+        "nome_reale": "Pierluigi Marchisio",
+        "squadra": "Homeless",
+        "categoria": "B2",
+        "punti_campionato": "53",
+        "prezzo": 13
+    },
+    {
+        "nome_display": "Tommaso Nardelli (Spartak)",
+        "nome_reale": "Tommaso Nardelli",
+        "squadra": "Tommaso Nardelli",
+        "categoria": "B2",
+        "punti_campionato": "52",
+        "prezzo": 12
+    },
+    {
+        "nome_display": "Luca Rivetti (Valhalla)",
+        "nome_reale": "Luca Rivetti",
+        "squadra": "Valhalla",
+        "categoria": "B2",
+        "punti_campionato": "46",
+        "prezzo": 12
+    },
+    {
+        "nome_display": "Simone Piccioli (Together Hit)",
+        "nome_reale": "Simone Piccioli",
+        "squadra": "Together Hit",
+        "categoria": "B2",
+        "punti_campionato": "45",
+        "prezzo": 11
+    },
+    {
+        "nome_display": "Marco Antonucci (Valhalla)",
+        "nome_reale": "Marco Antonucci",
+        "squadra": "Valhalla",
+        "categoria": "B2",
+        "punti_campionato": "37",
+        "prezzo": 11
+    },
+    {
+        "nome_display": "Fabio Zorzan (Homeless)",
+        "nome_reale": "Fabio Zorzan",
+        "squadra": "Homeless",
+        "categoria": "B2",
+        "punti_campionato": "36",
+        "prezzo": 10
+    },
+    {
+        "nome_display": "Antonio Angelo Mele (Jedi Knights)",
+        "nome_reale": "Antonio Angelo Mele",
+        "squadra": "Jedi Knights",
+        "categoria": "B2",
+        "punti_campionato": "32",
+        "prezzo": 10
+    },
+    {
+        "nome_display": "Marco Bruno (Atletico Boomers)",
+        "nome_reale": "Marco Bruno",
+        "squadra": "Atletico Boomers",
+        "categoria": "B2",
+        "punti_campionato": "28",
+        "prezzo": 9
+    },
+    {
+        "nome_display": "Alessio Noto (Valhalla)",
+        "nome_reale": "Alessio Noto",
+        "squadra": "Valhalla",
+        "categoria": "B2",
+        "punti_campionato": "27",
+        "prezzo": 9
+    },
+    {
+        "nome_display": "Lorenzo La Iacona (Together Hit)",
+        "nome_reale": "Lorenzo La Iacona",
+        "squadra": "Together Hit",
+        "categoria": "B2",
+        "punti_campionato": "7",
+        "prezzo": 8
+    },
+    {
+        "nome_display": "Alessandro Castello (Monstars)",
+        "nome_reale": "Alessandro Castello",
+        "squadra": "Monstars",
+        "categoria": "B2",
+        "punti_campionato": "6",
+        "prezzo": 7
+    },
+    {
+        "nome_display": "Gabriele Argirò (Together Hit)",
+        "nome_reale": "Gabriele Argirò",
+        "squadra": "Together Hit",
+        "categoria": "B2",
+        "punti_campionato": "4",
+        "prezzo": 6
+    },
+    {
+        "nome_display": "Carlotta Amodeo (Hitbusters)",
+        "nome_reale": "Carlotta Amodeo",
+        "squadra": "Hitbusters",
+        "categoria": "B2",
+        "punti_campionato": "159",
+        "prezzo": 40
+    },
+    {
+        "nome_display": "Federica Amorelli (Monstars)",
+        "nome_reale": "Federica Amorelli",
+        "squadra": "Monstars",
+        "categoria": "B2",
+        "punti_campionato": "62",
+        "prezzo": 22
+    },
+    {
+        "nome_display": "Elena Pasino (Homeless)",
+        "nome_reale": "Elena Pasino",
+        "squadra": "Homeless",
+        "categoria": "B2",
+        "punti_campionato": "43",
+        "prezzo": 16
+    },
+    {
+        "nome_display": "Mara Ferraris (Monstars)",
+        "nome_reale": "Mara Ferraris",
+        "squadra": "Monstars",
+        "categoria": "B2",
+        "punti_campionato": "32",
+        "prezzo": 14
+    },
+    {
+        "nome_display": "Alice La Versa (Delirium Consulum)",
+        "nome_reale": "Alice La Versa",
+        "squadra": "Delirium Consulum",
+        "categoria": "B2",
+        "punti_campionato": "24",
+        "prezzo": 10
+    },
+    {
+        "nome_display": "Noemi Castelluccio (Hitbusters)",
+        "nome_reale": "Noemi Castelluccio",
+        "squadra": "Hitbusters",
+        "categoria": "B2",
+        "punti_campionato": "17",
+        "prezzo": 9
+    },
+    {
+        "nome_display": "Chiara Gilardi (Monstars)",
+        "nome_reale": "Chiara Gilardi",
+        "squadra": "Monstars",
+        "categoria": "B2",
+        "punti_campionato": "3",
+        "prezzo": 7
+    },
+    {
+        "nome_display": "Martina Lupo (Smaronne)",
+        "nome_reale": "Martina Lupo",
+        "squadra": "Smaronne",
+        "categoria": "Femminile",
+        "punti_campionato": "113",
+        "prezzo": 8
+    },
+    {
+        "nome_display": "Arianna Vismara (Levuoiqueikiwi)",
+        "nome_reale": "Arianna Vismara",
+        "squadra": "Levuoiqueikiwi",
+        "categoria": "Femminile",
+        "punti_campionato": "80",
+        "prezzo": 28
+    },
+    {
+        "nome_display": "Sara Sottolano (Smaronne)",
+        "nome_reale": "Sara Sottolano",
+        "squadra": "Smaronne",
+        "categoria": "Femminile",
+        "punti_campionato": "41",
+        "prezzo": 12
+    }
+]
