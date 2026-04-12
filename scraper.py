@@ -1,62 +1,77 @@
+import requests
+from bs4 import BeautifulSoup
 import firebase_admin
 from firebase_admin import credentials, firestore
-import json
-import os
 
-def ripristina_punti_blindato():
-    if not firebase_admin._apps:
-        cred = credentials.Certificate("chiave.json")
-        firebase_admin.initialize_app(cred)
+# 1. CONFIGURAZIONE FIREBASE
+# Assicurati di avere il file .json della chiave privata scaricato da Firebase Console
+cred = credentials.Certificate("serviceAccountKey.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
+
+def calcola_punti_giocatore(nome_reale, punti_fatti, categoria):
+    """
+    Calcola il punteggio secondo le regole del FantaHitball
+    """
+    # Esempio di calcolo basato sulla categoria
+    moltiplicatore = 1.0
+    if categoria == "A1": moltiplicatore = 1.0
+    elif categoria == "A2": moltiplicatore = 1.2
+    elif categoria == "B1": moltiplicatore = 1.5
+    elif categoria == "B2": moltiplicatore = 2.0
+    elif categoria == "FEM": moltiplicatore = 2.5
     
-    db = firestore.client()
+    punteggio_finale = punti_fatti * moltiplicatore
+    return round(punteggio_finale, 2)
 
-    with open("database_giocatori.json", "r", encoding="utf-8") as f:
-        dati_json = json.load(f)
+def scrap_referto_e_aggiorna(url_referto, giornata):
+    print(f"Inizio scansione referto: {url_referto}")
+    response = requests.get(url_referto)
+    soup = BeautifulSoup(response.text, 'html.parser')
 
-    docs = db.collection("giocatori").stream()
-    firebase_map = {doc.id.strip().upper(): doc.id for doc in docs}
+    # Trova la tabella dei giocatori (la struttura dipende dal sito PLV)
+    # Cerchiamo le righe dei giocatori nelle tabelle delle due squadre
+    tabelle_squadre = soup.find_all('table', class_='table-condensed')
 
-    batch = db.batch()
-    contatore = 0
-
-    for g in dati_json:
-        nome_json = g.get("nome_reale", "").strip().upper()
-
-        if nome_json in firebase_map:
-            doc_id = firebase_map[nome_json]
-            doc_ref = db.collection("giocatori").document(doc_id)
+    for tabella in tabelle_squadre:
+        righe = tabella.find_all('tr')[1:]  # Salta l'intestazione
+        for riga in righe:
+            colonne = riga.find_all('td')
+            if len(colonne) < 3: continue
             
-            # Recuperiamo i punti dal JSON se esistono
-            punti_raw = g.get("punti_giornate", {})
-            
-            # FORZATURA: Trasformiamo tutto in una mappa pulita per Firebase
-            # Chiave deve essere Stringa ("1"), Valore deve essere Numero (5.0)
-            punti_puliti = {}
-            if isinstance(punti_raw, dict):
-                for k, v in punti_raw.items():
-                    punti_puliti[str(k)] = float(v) if v is not None else 0.0
-            elif isinstance(punti_raw, list):
-                # Se per errore nel JSON è una lista, la convertiamo in mappa
-                for i, v in enumerate(punti_raw):
-                    punti_puliti[str(i+1)] = float(v) if v is not None else 0.0
+            nome_reale = colonne[1].text.strip().upper()
+            try:
+                punti_fatti = int(colonne[2].text.strip())
+            except:
+                punti_fatti = 0
 
-            update_data = {
-                "prezzo": g.get("prezzo", 0),
-                "categoria": g.get("categoria", "A1"),
-                "punti_giornate": punti_puliti # Sovrascrive la vecchia mappa errata
-            }
+            if nome_reale:
+                # Recupera info giocatore dal DB per conoscere la categoria
+                doc_ref = db.collection('giocatori').document(nome_reale)
+                doc = doc_ref.get()
+                
+                if doc.exists:
+                    dati = doc.to_dict()
+                    categoria = dati.get('categoria', 'A1')
+                    
+                    # Esegue il calcolo dei punti
+                    punti_fanta = calcola_punti_giocatore(nome_reale, punti_fatti, categoria)
+                    
+                    # Aggiorna Firebase: Punti per la giornata specifica
+                    doc_ref.set({
+                        'punti_giornate': {
+                            str(giornata): punti_fanta
+                        }
+                    }, merge=True)
+                    
+                    print(f"Aggiornato {nome_reale}: {punti_fanta} punti (Giornata {giornata})")
+                else:
+                    print(f"Giocatore {nome_reale} non trovato nel database per il calcolo categoria.")
 
-            # Usiamo set con merge=True per aggiornare solo questi campi
-            batch.set(doc_ref, update_data, merge=True)
-            contatore += 1
+# --- ESECUZIONE ---
+# Inserisci qui l'URL del referto della partita giocata
+url_esempio = "https://referto.plvhitball.it/index.php?route=referto/referto&referto_id=XXXX"
+giornata_da_aggiornare = 1
 
-            if contatore % 400 == 0:
-                batch.commit()
-                batch = db.batch()
-                print(f"Sincronizzati {contatore} giocatori...")
-
-    batch.commit()
-    print(f"\nSISTEMATO! Controlla ora su Firebase: 'punti_giornate' deve essere una MAP.")
-
-if __name__ == "__main__":
-    ripristina_punti_blindato()
+scrap_referto_e_aggiorna(url_esempio, giornata_da_aggiornare)
+print("Operazione completata.")
