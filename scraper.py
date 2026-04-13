@@ -28,6 +28,26 @@ def inizializza_firebase():
         firebase_admin.initialize_app(cred)
     return firestore.client()
 
+# --- LETTURA DATABASE LOCALE (IL TUO JSON) ---
+def carica_anagrafica_locale(percorso_file="giocatori.json"):
+    try:
+        with open(percorso_file, 'r', encoding='utf-8') as f:
+            dati = json.load(f)
+        mappa = {}
+        for g in dati:
+            # Puliamo il nome esattamente come fa lo scraper per farli combaciare al 100%
+            nome_clean = re.sub(r'[^A-Z\s\']', '', g['nome_reale'].upper()).strip()
+            mappa[nome_clean] = {
+                'categoria': g['categoria'],
+                'prezzo': g['prezzo'],
+                'nome_originale': g['nome_reale']
+            }
+        print(f">>> Caricati {len(mappa)} giocatori dal file {percorso_file}.")
+        return mappa
+    except Exception as e:
+        print(f"ERRORE CRITICO: Impossibile leggere {percorso_file}. Dettagli: {e}")
+        return {}
+
 # --- 2. LOGICA CALCOLO PUNTI FANTAHITBALL ---
 def calcola_punteggio_fanta(hits, autohits, fatti, subiti, giallo, rosso, is_fem, perso_tavolino):
     punti_base = (hits * 2) if is_fem else hits
@@ -44,13 +64,12 @@ def calcola_punteggio_fanta(hits, autohits, fatti, subiti, giallo, rosso, is_fem
     
     return punti_base + malus_autohit + bonus_fatti + bonus_subiti + malus_disc
 
-# --- 3. ANALISI DEL SINGOLO REFERTO (IL "RECINTO") ---
-def processa_referto(url, giornata, tot_casa, tot_trasf, db):
+# --- 3. ANALISI DEL SINGOLO REFERTO ---
+def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa_giocatori):
     try:
         res = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(res.text, 'html.parser')
         
-        # Check Sconfitta a Tavolino
         tavolino_casa = False
         tavolino_trasf = False
         alert_tavolino = soup.find(string=re.compile(r'vinta a tavolino', re.I))
@@ -89,18 +108,21 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db):
 
         mezzo = len(giocatori_match) / 2
         for idx, g in enumerate(giocatori_match):
-            doc_ref = db.collection('giocatori').document(g['nome'])
-            doc = doc_ref.get()
+            nome_db = g['nome']
             
-            if not doc.exists:
-                continue 
-                
-            dati = doc.to_dict() or {}
-            
-            if 'punti_giornate' in dati and str(giornata) in dati['punti_giornate']:
+            # SE IL GIOCATORE NON È NEL TUO JSON, LO IGNORA
+            if nome_db not in mappa_giocatori:
                 continue 
 
-            is_fem = (g['nome'] in QUOTE_ROSA_FEM) or (dati.get('categoria') == "FEM")
+            doc_ref = db.collection('giocatori').document(nome_db)
+            doc = doc_ref.get()
+            dati_firebase = doc.to_dict() if doc.exists else {}
+            
+            # SE HA GIÀ I PUNTI DI QUESTA GIORNATA, SALTA
+            if 'punti_giornate' in dati_firebase and str(giornata) in dati_firebase['punti_giornate']:
+                continue 
+
+            is_fem = nome_db in QUOTE_ROSA_FEM
             is_casa = (idx < mezzo)
             
             fatti = tot_casa if is_casa else tot_trasf
@@ -109,14 +131,22 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db):
 
             voto = calcola_punteggio_fanta(g['hits'], g['autohits'], fatti, subiti, g['giallo'], g['rosso'], is_fem, ha_perso_tavolino)
             
-            doc_ref.set({'punti_giornate': {str(giornata): voto}}, merge=True)
-            print(f"  -> Salvato in DB: {g['nome']} (G{giornata}): {voto} pt")
+            # PREPARA I DATI DA SALVARE (Prende Categoria e Prezzo dal JSON)
+            dati_da_salvare = {
+                'nome': mappa_giocatori[nome_db]['nome_originale'],
+                'categoria': mappa_giocatori[nome_db]['categoria'],
+                'prezzo': mappa_giocatori[nome_db]['prezzo'],
+                'punti_giornate': {str(giornata): voto}
+            }
+            
+            doc_ref.set(dati_da_salvare, merge=True)
+            print(f"  -> Aggiunto a Firebase: {nome_db} | {mappa_giocatori[nome_db]['categoria']} | (G{giornata}): {voto} pt")
 
     except Exception as e:
         print(f"Errore referto {url}: {e}")
 
 # --- 4. CRAWLER ---
-def recupera_e_analizza(db):
+def recupera_e_analizza(db, mappa_giocatori):
     for camp_id in ID_CAMPIONATI:
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
         print(f"\n{'='*40}\n>>> SCANSIONE CAMPIONATO ID: {camp_id}\n{'='*40}")
@@ -125,14 +155,10 @@ def recupera_e_analizza(db):
             res = requests.get(url_camp, headers=HEADERS, timeout=15)
             soup = BeautifulSoup(res.text, 'html.parser')
             
-            referti_analizzati = 0
-            
             for a_tag in soup.find_all('a', href=True):
                 href = a_tag['href']
                 
                 if 'match_id=' in href or 'referto_id=' in href:
-                    
-                    # CORREZIONE: Saliamo nell'HTML finché non troviamo tutta la riga col risultato
                     riga = a_tag
                     testo_riga = ""
                     for _ in range(5):
@@ -161,16 +187,18 @@ def recupera_e_analizza(db):
                                 break
                     
                     url_ref = "https://referto.plvhitball.it/" + href.lstrip('/') if not href.startswith('http') else href
-                    referti_analizzati += 1
-                    processa_referto(url_ref, giornata, tot_casa, tot_trasf, db)
-                    
-            print(f"[OK] Analizzati {referti_analizzati} referti utili per il Camp. {camp_id}.")
+                    processa_referto(url_ref, giornata, tot_casa, tot_trasf, db, mappa_giocatori)
                     
         except Exception as e:
             print(f"Errore Campionato {camp_id}: {e}")
 
 if __name__ == "__main__":
-    print("Avvio FantaHitball Bot...")
-    db_firestore = inizializza_firebase()
-    recupera_e_analizza(db_firestore)
-    print("\n=== AGGIORNAMENTO COMPLETATO ===")
+    print("Avvio FantaHitball Bot (Integrazione JSON Locale)...")
+    mappa = carica_anagrafica_locale()
+    
+    if not mappa:
+        print("Il bot si ferma perché non ha trovato o letto il file 'giocatori.json'.")
+    else:
+        db_firestore = inizializza_firebase()
+        recupera_e_analizza(db_firestore, mappa)
+        print("\n=== AGGIORNAMENTO FIREBASE COMPLETATO ===")
