@@ -22,10 +22,8 @@ def inizializza_firebase():
     if not firebase_admin._apps:
         cred_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         if cred_json:
-            print(">>> Uso Secret FIREBASE_SERVICE_ACCOUNT")
             cred = credentials.Certificate(json.loads(cred_json))
         else:
-            print(">>> Uso file locale serviceAccountKey.json")
             cred = credentials.Certificate("serviceAccountKey.json")
         firebase_admin.initialize_app(cred)
     db = firestore.client()
@@ -33,7 +31,6 @@ def inizializza_firebase():
     return db
 
 def carica_anagrafica_locale(percorso_file="giocatori.json"):
-    print(f">>> Caricamento {percorso_file}...")
     try:
         with open(percorso_file, 'r', encoding='utf-8') as f:
             dati = json.load(f)
@@ -46,11 +43,22 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
                 'prezzo': g['prezzo'],
                 'nome_originale': g['nome_reale']
             }
-        print(f">>> JSON caricato: {len(mappa)} giocatori in memoria.")
+        print(f">>> JSON: {len(mappa)} giocatori in memoria.")
         return mappa
     except Exception as e:
         print(f">>> ERRORE JSON: {e}")
         return {}
+
+# --- NUOVA FUNZIONE: FOTOGRAFIA DEL DATABASE ---
+def scarica_stato_firebase(db):
+    print(">>> Fotografo lo stato di Firebase per andare alla massima velocità...")
+    stato = {}
+    docs = db.collection('giocatori').stream()
+    for doc in docs:
+        dati = doc.to_dict()
+        stato[doc.id] = dati.get('punti_giornate', {})
+    print(f">>> Fotografia completata: {len(stato)} giocatori letti in un colpo solo.")
+    return stato
 
 def calcola_punteggio_fanta(hits, autohits, fatti, subiti, giallo, rosso, is_fem, tav):
     p_base = (hits * 2) if is_fem else hits
@@ -63,7 +71,7 @@ def calcola_punteggio_fanta(hits, autohits, fatti, subiti, giallo, rosso, is_fem
     malus_disc = (-10 if giallo else 0) + (-20 if rosso else 0) + (-20 if tav else 0)
     return p_base + malus_auto + bonus_att + bonus_def + malus_disc
 
-def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa):
+def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
     try:
         res = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(res.text, 'html.parser')
@@ -72,7 +80,6 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa):
         
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         if len(liste_squadre) < 2:
-            print(f"      [!] Referto incompleto (mancano liste squadre): {url}")
             return
 
         giocatori_match = []
@@ -103,12 +110,8 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa):
             if g['nome'] not in mappa:
                 continue
 
-            # --- IL "FRENO" PER LA VELOCITA' (SALTA I GIA' CALCOLATI) ---
-            doc_ref = db.collection('giocatori').document(g['nome'])
-            doc = doc_ref.get()
-            
-            if doc.exists and 'punti_giornate' in doc.to_dict() and str(giornata) in doc.to_dict()['punti_giornate']:
-                # Dati già presenti, salta per risparmiare tempo e scritture
+            # --- IL NUOVO FRENO (Legge dalla memoria RAM, istantaneo) ---
+            if g['nome'] in stato_db and str(giornata) in stato_db[g['nome']]:
                 continue
             # ------------------------------------------------------------
 
@@ -127,7 +130,14 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa):
             }
             
             try:
+                doc_ref = db.collection('giocatori').document(g['nome'])
                 doc_ref.set(dati_invio, merge=True)
+                
+                # Aggiorniamo la memoria locale così se lo rilegge sa che l'ha già fatto
+                if g['nome'] not in stato_db:
+                    stato_db[g['nome']] = {}
+                stato_db[g['nome']][str(giornata)] = voto
+                
                 print(f"      [OK] Scritto {g['nome']} | G{giornata}: {voto}pt")
             except Exception as e_db:
                 print(f"      [ERR] Fallita scrittura {g['nome']}: {e_db}")
@@ -135,14 +145,13 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa):
     except Exception as e:
         print(f"      [ERR] Errore generale referto: {e}")
 
-def recupera_e_analizza(db, mappa):
+def recupera_e_analizza(db, mappa, stato_db):
     for camp_id in ID_CAMPIONATI:
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
         print(f"\n>>> SCANSIONE CAMPIONATO {camp_id}")
         try:
             res = requests.get(url_camp, headers=HEADERS, timeout=15)
             soup = BeautifulSoup(res.text, 'html.parser')
-            matches = 0
             for a_tag in soup.find_all('a', href=True):
                 if 'match_id=' in a_tag['href'] or 'referto_id=' in a_tag['href']:
                     riga = a_tag
@@ -154,7 +163,6 @@ def recupera_e_analizza(db, mappa):
                     m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', riga.get_text())
                     if not m_ris: continue
 
-                    matches += 1
                     giornata = 1
                     curr = a_tag
                     while curr:
@@ -167,15 +175,14 @@ def recupera_e_analizza(db, mappa):
                                 break
                     
                     url_ref = "https://referto.plvhitball.it/" + a_tag['href'].lstrip('/')
-                    print(f"   > Partita G{giornata}: {m_ris.group(1)}-{m_ris.group(2)}")
-                    processa_referto(url_ref, giornata, int(m_ris.group(1)), int(m_ris.group(2)), db, mappa)
-            print(f">>> Campionato {camp_id} finito. Partite analizzate: {matches}")
+                    processa_referto(url_ref, giornata, int(m_ris.group(1)), int(m_ris.group(2)), db, mappa, stato_db)
         except Exception as e:
-            print(f">>> Errore Campionato {camp_id}: {e}")
+            pass
 
 if __name__ == "__main__":
     mappa_g = carica_anagrafica_locale()
     if mappa_g:
         db_fs = inizializza_firebase()
-        recupera_e_analizza(db_fs, mappa_g)
+        stato_attuale = scarica_stato_firebase(db_fs)
+        recupera_e_analizza(db_fs, mappa_g, stato_attuale)
     print("\n>>> PROCESSO TERMINATO.")
