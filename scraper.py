@@ -16,7 +16,6 @@ QUOTE_ROSA_FEM = [
     "ALICE LA VERSA", "NOEMI CASTELLUCCIO", "CHIARA GILARDI"
 ]
 
-# Header base, il più semplice possibile per non far scattare i blocchi IP
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
 def inizializza_firebase():
@@ -59,33 +58,27 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db):
             if tot_casa == 0: tavolino_casa = True
             if tot_trasf == 0: tavolino_trasf = True
 
-        # Trova tutti i "cassetti" (li) della pagina
         li_tags = soup.find_all('li', class_=re.compile(r'list-group-item', re.I))
         giocatori_match = []
 
         for li in li_tags:
             testo = li.get_text(separator=' ', strip=True)
             
-            # Se la riga non contiene Tot. o AUTOHIT, non è un giocatore
             if "Tot." not in testo and "AUTOHIT" not in testo:
                 continue
 
-            # Estrae il nome pulendolo da numeri, Tot., x, ecc.
             nome_raw = re.split(r'\d+\s*x|Tot\.', testo, flags=re.I)[0].strip()
             nome_clean = re.sub(r'[^A-Z\s\']', '', nome_raw.upper()).strip()
             
             if len(nome_clean) < 3: 
                 continue
 
-            # Estrae Hits
             m_hits = re.search(r'Tot\.\s*(\d+)', testo, re.I)
             hits = int(m_hits.group(1)) if m_hits else 0
             
-            # Estrae Autohits
             m_auto = re.search(r'(\d+)\s*x\s*AUTOHIT', testo, re.I)
             autohits = int(m_auto.group(1)) if m_auto else 0
 
-            # Cerca i cartellini solo ed esclusivamente dentro il "cassetto" di questo giocatore
             giallo = li.find(class_=re.compile(r'warning|yellow', re.I)) is not None
             rosso = li.find(class_=re.compile(r'danger|red', re.I)) is not None
 
@@ -94,23 +87,19 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db):
                 "giallo": giallo, "rosso": rosso
             })
 
-        # Processa e Salva su Firebase
         mezzo = len(giocatori_match) / 2
         for idx, g in enumerate(giocatori_match):
-            # 1. RECUPERA IL GIOCATORE DAL DB (SE NON ESISTE, LO IGNORA TOTALMENTE)
             doc_ref = db.collection('giocatori').document(g['nome'])
             doc = doc_ref.get()
             
             if not doc.exists:
-                continue # Giocatore non in app, passo al prossimo
+                continue 
                 
             dati = doc.to_dict() or {}
             
-            # 2. CONTROLLO VELOCITÀ: Voto già calcolato? Salto.
             if 'punti_giornate' in dati and str(giornata) in dati['punti_giornate']:
                 continue 
 
-            # 3. VERIFICA GENERE E TAVOLINO
             is_fem = (g['nome'] in QUOTE_ROSA_FEM) or (dati.get('categoria') == "FEM")
             is_casa = (idx < mezzo)
             
@@ -118,7 +107,6 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db):
             subiti = tot_trasf if is_casa else tot_casa
             ha_perso_tavolino = (is_casa and tavolino_casa) or (not is_casa and tavolino_trasf)
 
-            # 4. CALCOLO FINALE E SCRITTURA
             voto = calcola_punteggio_fanta(g['hits'], g['autohits'], fatti, subiti, g['giallo'], g['rosso'], is_fem, ha_perso_tavolino)
             
             doc_ref.set({'punti_giornate': {str(giornata): voto}}, merge=True)
@@ -127,7 +115,7 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db):
     except Exception as e:
         print(f"Errore referto {url}: {e}")
 
-# --- 4. CRAWLER (Quello originale che trova tutti i link funzionanti) ---
+# --- 4. CRAWLER ---
 def recupera_e_analizza(db):
     for camp_id in ID_CAMPIONATI:
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
@@ -142,21 +130,25 @@ def recupera_e_analizza(db):
             for a_tag in soup.find_all('a', href=True):
                 href = a_tag['href']
                 
-                # Cerca i bottoni "Risultato"
                 if 'match_id=' in href or 'referto_id=' in href:
                     
-                    # 1. Recupera la riga per vedere se c'è il risultato (escludendo le rinviate/non giocate)
-                    riga = a_tag.find_parent('td') or a_tag.find_parent('div')
-                    testo_riga = riga.get_text(separator=' ', strip=True) if riga else ""
+                    # CORREZIONE: Saliamo nell'HTML finché non troviamo tutta la riga col risultato
+                    riga = a_tag
+                    testo_riga = ""
+                    for _ in range(5):
+                        if riga.parent:
+                            riga = riga.parent
+                            testo_riga = riga.get_text(separator=' ', strip=True)
+                            if re.search(r'Risultato:\s*\d+\s*-\s*\d+', testo_riga):
+                                break
                     
                     match_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', testo_riga)
                     if not match_ris:
-                        continue # Partita rinviata o senza risultato: passo oltre
+                        continue 
                         
                     tot_casa = int(match_ris.group(1))
                     tot_trasf = int(match_ris.group(2))
                     
-                    # 2. Risale alla Giornata
                     giornata = 1
                     curr = a_tag
                     while curr:
@@ -168,7 +160,6 @@ def recupera_e_analizza(db):
                                 giornata = int(m.group(1) or m.group(2))
                                 break
                     
-                    # 3. Manda tutto in elaborazione
                     url_ref = "https://referto.plvhitball.it/" + href.lstrip('/') if not href.startswith('http') else href
                     referti_analizzati += 1
                     processa_referto(url_ref, giornata, tot_casa, tot_trasf, db)
@@ -179,7 +170,7 @@ def recupera_e_analizza(db):
             print(f"Errore Campionato {camp_id}: {e}")
 
 if __name__ == "__main__":
-    print("Avvio FantaHitball Bot (Versione Finale Ottimizzata)...")
+    print("Avvio FantaHitball Bot...")
     db_firestore = inizializza_firebase()
     recupera_e_analizza(db_firestore)
     print("\n=== AGGIORNAMENTO COMPLETATO ===")
