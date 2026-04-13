@@ -1,6 +1,13 @@
 name: Aggiornamento Punti FantaHitball
 
 on:
+  schedule:
+    # Ogni mattina alle 08:00 italiane (06:00 UTC)
+    - cron: '0 6 * * *'
+    
+    # Ogni ora dalle 17:00 alle 00:00 italiane (15:00-22:00 UTC)
+    - cron: '0 15-22 * * *'
+    
   workflow_dispatch: # Ti permette di farlo partire a mano cliccando su "Run workflow"
 
 jobs:
@@ -22,6 +29,5 @@ jobs:
 
       - name: Esecuzione Scraper
         env:
-          # Questo collega il Secret di GitHub al codice Python
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: python scraper.py
