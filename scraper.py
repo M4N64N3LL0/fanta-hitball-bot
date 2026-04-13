@@ -103,15 +103,21 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa):
             if g['nome'] not in mappa:
                 continue
 
+            # --- IL "FRENO" PER LA VELOCITA' (SALTA I GIA' CALCOLATI) ---
+            doc_ref = db.collection('giocatori').document(g['nome'])
+            doc = doc_ref.get()
+            
+            if doc.exists and 'punti_giornate' in doc.to_dict() and str(giornata) in doc.to_dict()['punti_giornate']:
+                # Dati già presenti, salta per risparmiare tempo e scritture
+                continue
+            # ------------------------------------------------------------
+
             is_fem = g['nome'] in QUOTE_ROSA_FEM
             fatti = tot_casa if g['is_casa'] else tot_trasf
             subiti = tot_trasf if g['is_casa'] else tot_casa
             tav_match = tavolino and ((g['is_casa'] and tot_casa == 0) or (not g['is_casa'] and tot_trasf == 0))
 
             voto = calcola_punteggio_fanta(g['hits'], g['autohits'], fatti, subiti, g['giallo'], g['rosso'], is_fem, tav_match)
-            
-            # --- SCRITTURA FIREBASE CON LOG ---
-            doc_ref = db.collection('giocatori').document(g['nome'])
             
             dati_invio = {
                 'nome': mappa[g['nome']]['nome_originale'],
