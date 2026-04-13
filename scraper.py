@@ -28,7 +28,6 @@ def inizializza_firebase():
         firebase_admin.initialize_app(cred)
     return firestore.client()
 
-# --- LETTURA DATABASE LOCALE (IL TUO JSON) ---
 def carica_anagrafica_locale(percorso_file="giocatori.json"):
     try:
         with open(percorso_file, 'r', encoding='utf-8') as f:
@@ -41,14 +40,13 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
                 'prezzo': g['prezzo'],
                 'nome_originale': g['nome_reale']
             }
-        print(f">>> Caricati {len(mappa)} giocatori dal file {percorso_file}.")
         return mappa
-    except Exception as e:
-        print(f"ERRORE CRITICO: Impossibile leggere {percorso_file}. Dettagli: {e}")
+    except:
         return {}
 
-# --- 2. LOGICA CALCOLO PUNTI FANTAHITBALL ---
+# --- 2. LOGICA CALCOLO PUNTI ---
 def calcola_punteggio_fanta(hits, autohits, fatti, subiti, giallo, rosso, is_fem, perso_tavolino):
+    # Ora 'hits' sono i tiri fisici totali
     punti_base = (hits * 2) if is_fem else hits
     malus_autohit = -(autohits * 1)
     
@@ -63,35 +61,32 @@ def calcola_punteggio_fanta(hits, autohits, fatti, subiti, giallo, rosso, is_fem
     
     return punti_base + malus_autohit + bonus_fatti + bonus_subiti + malus_disc
 
-# --- 3. ANALISI DEL SINGOLO REFERTO ---
+# --- 3. ANALISI REFERTO ---
 def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa_giocatori):
     try:
         res = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(res.text, 'html.parser')
         
-        tavolino_casa = False
-        tavolino_trasf = False
-        alert_tavolino = soup.find(string=re.compile(r'vinta a tavolino', re.I))
-        if alert_tavolino:
-            if tot_casa == 0: tavolino_casa = True
-            if tot_trasf == 0: tavolino_trasf = True
+        tavolino_casa = (tot_casa == 0 and soup.find(string=re.compile(r'vinta a tavolino', re.I)))
+        tavolino_trasf = (tot_trasf == 0 and soup.find(string=re.compile(r'vinta a tavolino', re.I)))
 
-        # Trova le due "scatole" che contengono i giocatori (Casa e Trasferta)
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         giocatori_match = []
 
-        # Funzione interna per estrarre i giocatori da una singola scatola
         def estrai_da_lista(ul_node, is_casa):
             for li in ul_node.find_all('li', class_=re.compile(r'list-group-item', re.I)):
                 testo = li.get_text(separator=' ', strip=True)
-                if "Tot." not in testo and "AUTOHIT" not in testo: continue
+                if "x" not in testo: continue
 
                 nome_raw = re.split(r'\d+\s*x|Tot\.', testo, flags=re.I)[0].strip()
                 nome_clean = re.sub(r'[^A-Z\s\']', '', nome_raw.upper()).strip()
                 if len(nome_clean) < 3: continue
 
-                m_hits = re.search(r'Tot\.\s*(\d+)', testo, re.I)
-                hits = int(m_hits.group(1)) if m_hits else 0
+                # NUOVA LOGICA: Somma tutti i numeri prima delle 'x' (es: "2 x2 3 x3" -> 2+3 = 5 hit)
+                tiri_fisici = 0
+                matches_hit = re.findall(r'(\d+)\s*x\s*(?:2|3)', testo)
+                for m in matches_hit:
+                    tiri_fisici += int(m)
                 
                 m_auto = re.search(r'(\d+)\s*x\s*AUTOHIT', testo, re.I)
                 autohits = int(m_auto.group(1)) if m_auto else 0
@@ -100,106 +95,70 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa_giocatori):
                 rosso = li.find(class_=re.compile(r'danger|red', re.I)) is not None
 
                 giocatori_match.append({
-                    "nome": nome_clean, "hits": hits, "autohits": autohits, 
+                    "nome": nome_clean, "hits": tiri_fisici, "autohits": autohits, 
                     "giallo": giallo, "rosso": rosso, "is_casa": is_casa
                 })
 
-        # Estraiamo Casa (prima lista) e Trasferta (seconda lista) in modo blindato
         if len(liste_squadre) >= 2:
             estrai_da_lista(liste_squadre[0], is_casa=True)
             estrai_da_lista(liste_squadre[1], is_casa=False)
 
         for g in giocatori_match:
             nome_db = g['nome']
-            
-            if nome_db not in mappa_giocatori:
-                continue 
+            if nome_db not in mappa_giocatori: continue 
 
             doc_ref = db.collection('giocatori').document(nome_db)
-            doc = doc_ref.get()
-            dati_firebase = doc.to_dict() if doc.exists else {}
-            
-            # --- RIMOZIONE BLOCCO TEMPORANEA ---
-            # Questo permetterà di sovrascrivere i dati vecchi.
-            # QUANDO FINISCE IL GIRO DI CORREZIONE, TOGLI IL # DA QUESTE DUE RIGHE SOTTO:
-            # if 'punti_giornate' in dati_firebase and str(giornata) in dati_firebase['punti_giornate']:
-            #     continue 
+            # Rimuovi i # qui sotto quando hai finito di correggere i dati vecchi
+            # doc = doc_ref.get()
+            # if doc.exists and 'punti_giornate' in doc.to_dict() and str(giornata) in doc.to_dict()['punti_giornate']: continue
 
             is_fem = nome_db in QUOTE_ROSA_FEM
-            
             fatti = tot_casa if g['is_casa'] else tot_trasf
             subiti = tot_trasf if g['is_casa'] else tot_casa
             ha_perso_tavolino = (g['is_casa'] and tavolino_casa) or (not g['is_casa'] and tavolino_trasf)
 
             voto = calcola_punteggio_fanta(g['hits'], g['autohits'], fatti, subiti, g['giallo'], g['rosso'], is_fem, ha_perso_tavolino)
             
-            dati_da_salvare = {
+            db.collection('giocatori').document(nome_db).set({
                 'nome': mappa_giocatori[nome_db]['nome_originale'],
                 'categoria': mappa_giocatori[nome_db]['categoria'],
                 'prezzo': mappa_giocatori[nome_db]['prezzo'],
                 'punti_giornate': {str(giornata): voto}
-            }
-            
-            doc_ref.set(dati_da_salvare, merge=True)
-            print(f"  -> Aggiornato in Firebase: {nome_db} | (G{giornata}): {voto} pt")
+            }, merge=True)
+            print(f"  -> {nome_db} (G{giornata}): {voto} pt ({g['hits']} hit)")
 
     except Exception as e:
-        print(f"Errore referto {url}: {e}")
+        print(f"Errore: {e}")
 
-# --- 4. CRAWLER ---
 def recupera_e_analizza(db, mappa_giocatori):
     for camp_id in ID_CAMPIONATI:
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
-        print(f"\n{'='*40}\n>>> SCANSIONE CAMPIONATO ID: {camp_id}\n{'='*40}")
-        
         try:
             res = requests.get(url_camp, headers=HEADERS, timeout=15)
             soup = BeautifulSoup(res.text, 'html.parser')
-            
             for a_tag in soup.find_all('a', href=True):
-                href = a_tag['href']
-                
-                if 'match_id=' in href or 'referto_id=' in href:
+                if 'match_id=' in a_tag['href'] or 'referto_id=' in a_tag['href']:
                     riga = a_tag
-                    testo_riga = ""
                     for _ in range(5):
                         if riga.parent:
                             riga = riga.parent
-                            testo_riga = riga.get_text(separator=' ', strip=True)
-                            if re.search(r'Risultato:\s*\d+\s*-\s*\d+', testo_riga):
-                                break
-                    
-                    match_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', testo_riga)
-                    if not match_ris:
-                        continue 
-                        
-                    tot_casa = int(match_ris.group(1))
-                    tot_trasf = int(match_ris.group(2))
-                    
-                    giornata = 1
-                    curr = a_tag
-                    while curr:
-                        curr = curr.find_previous(['h1', 'h2', 'h3', 'h4', 'div', 'strong', 'b'])
-                        if curr:
-                            t = curr.get_text(strip=True)
-                            m = re.search(r'(?:Giornata\s+(\d+))|(?:(\d+)[\^°a-z]*\s+Giornata)', t, re.IGNORECASE)
-                            if m:
-                                giornata = int(m.group(1) or m.group(2))
-                                break
-                    
-                    url_ref = "https://referto.plvhitball.it/" + href.lstrip('/') if not href.startswith('http') else href
-                    processa_referto(url_ref, giornata, tot_casa, tot_trasf, db, mappa_giocatori)
-                    
-        except Exception as e:
-            print(f"Errore Campionato {camp_id}: {e}")
+                            if "Risultato:" in riga.get_text(): break
+                    m = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', riga.get_text())
+                    if m:
+                        giornata = 1
+                        curr = a_tag
+                        while curr:
+                            curr = curr.find_previous(['h1', 'h2', 'h3', 'h4', 'strong'])
+                            if curr:
+                                mg = re.search(r'Giornata\s+(\d+)', curr.get_text(), re.I)
+                                if mg: 
+                                    giornata = int(mg.group(1))
+                                    break
+                        processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), giornata, int(m.group(1)), int(m.group(2)), db, mappa_giocatori)
+        except: pass
 
 if __name__ == "__main__":
-    print("Avvio FantaHitball Bot (Correzione Squadre Casa/Trasferta)...")
     mappa = carica_anagrafica_locale()
-    
-    if not mappa:
-        print("Il bot si ferma perché non ha trovato o letto il file 'giocatori.json'.")
-    else:
+    if mappa:
         db_firestore = inizializza_firebase()
         recupera_e_analizza(db_firestore, mappa)
-        print("\n=== AGGIORNAMENTO FIREBASE COMPLETATO ===")
