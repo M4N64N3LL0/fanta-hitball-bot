@@ -35,7 +35,6 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
             dati = json.load(f)
         mappa = {}
         for g in dati:
-            # Puliamo il nome esattamente come fa lo scraper per farli combaciare al 100%
             nome_clean = re.sub(r'[^A-Z\s\']', '', g['nome_reale'].upper()).strip()
             mappa[nome_clean] = {
                 'categoria': g['categoria'],
@@ -77,40 +76,42 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa_giocatori):
             if tot_casa == 0: tavolino_casa = True
             if tot_trasf == 0: tavolino_trasf = True
 
-        li_tags = soup.find_all('li', class_=re.compile(r'list-group-item', re.I))
+        # Trova le due "scatole" che contengono i giocatori (Casa e Trasferta)
+        liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         giocatori_match = []
 
-        for li in li_tags:
-            testo = li.get_text(separator=' ', strip=True)
-            
-            if "Tot." not in testo and "AUTOHIT" not in testo:
-                continue
+        # Funzione interna per estrarre i giocatori da una singola scatola
+        def estrai_da_lista(ul_node, is_casa):
+            for li in ul_node.find_all('li', class_=re.compile(r'list-group-item', re.I)):
+                testo = li.get_text(separator=' ', strip=True)
+                if "Tot." not in testo and "AUTOHIT" not in testo: continue
 
-            nome_raw = re.split(r'\d+\s*x|Tot\.', testo, flags=re.I)[0].strip()
-            nome_clean = re.sub(r'[^A-Z\s\']', '', nome_raw.upper()).strip()
-            
-            if len(nome_clean) < 3: 
-                continue
+                nome_raw = re.split(r'\d+\s*x|Tot\.', testo, flags=re.I)[0].strip()
+                nome_clean = re.sub(r'[^A-Z\s\']', '', nome_raw.upper()).strip()
+                if len(nome_clean) < 3: continue
 
-            m_hits = re.search(r'Tot\.\s*(\d+)', testo, re.I)
-            hits = int(m_hits.group(1)) if m_hits else 0
-            
-            m_auto = re.search(r'(\d+)\s*x\s*AUTOHIT', testo, re.I)
-            autohits = int(m_auto.group(1)) if m_auto else 0
+                m_hits = re.search(r'Tot\.\s*(\d+)', testo, re.I)
+                hits = int(m_hits.group(1)) if m_hits else 0
+                
+                m_auto = re.search(r'(\d+)\s*x\s*AUTOHIT', testo, re.I)
+                autohits = int(m_auto.group(1)) if m_auto else 0
 
-            giallo = li.find(class_=re.compile(r'warning|yellow', re.I)) is not None
-            rosso = li.find(class_=re.compile(r'danger|red', re.I)) is not None
+                giallo = li.find(class_=re.compile(r'warning|yellow', re.I)) is not None
+                rosso = li.find(class_=re.compile(r'danger|red', re.I)) is not None
 
-            giocatori_match.append({
-                "nome": nome_clean, "hits": hits, "autohits": autohits, 
-                "giallo": giallo, "rosso": rosso
-            })
+                giocatori_match.append({
+                    "nome": nome_clean, "hits": hits, "autohits": autohits, 
+                    "giallo": giallo, "rosso": rosso, "is_casa": is_casa
+                })
 
-        mezzo = len(giocatori_match) / 2
-        for idx, g in enumerate(giocatori_match):
+        # Estraiamo Casa (prima lista) e Trasferta (seconda lista) in modo blindato
+        if len(liste_squadre) >= 2:
+            estrai_da_lista(liste_squadre[0], is_casa=True)
+            estrai_da_lista(liste_squadre[1], is_casa=False)
+
+        for g in giocatori_match:
             nome_db = g['nome']
             
-            # SE IL GIOCATORE NON È NEL TUO JSON, LO IGNORA
             if nome_db not in mappa_giocatori:
                 continue 
 
@@ -118,20 +119,20 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa_giocatori):
             doc = doc_ref.get()
             dati_firebase = doc.to_dict() if doc.exists else {}
             
-            # SE HA GIÀ I PUNTI DI QUESTA GIORNATA, SALTA
-            if 'punti_giornate' in dati_firebase and str(giornata) in dati_firebase['punti_giornate']:
-                continue 
+            # --- RIMOZIONE BLOCCO TEMPORANEA ---
+            # Questo permetterà di sovrascrivere i dati vecchi.
+            # QUANDO FINISCE IL GIRO DI CORREZIONE, TOGLI IL # DA QUESTE DUE RIGHE SOTTO:
+            # if 'punti_giornate' in dati_firebase and str(giornata) in dati_firebase['punti_giornate']:
+            #     continue 
 
             is_fem = nome_db in QUOTE_ROSA_FEM
-            is_casa = (idx < mezzo)
             
-            fatti = tot_casa if is_casa else tot_trasf
-            subiti = tot_trasf if is_casa else tot_casa
-            ha_perso_tavolino = (is_casa and tavolino_casa) or (not is_casa and tavolino_trasf)
+            fatti = tot_casa if g['is_casa'] else tot_trasf
+            subiti = tot_trasf if g['is_casa'] else tot_casa
+            ha_perso_tavolino = (g['is_casa'] and tavolino_casa) or (not g['is_casa'] and tavolino_trasf)
 
             voto = calcola_punteggio_fanta(g['hits'], g['autohits'], fatti, subiti, g['giallo'], g['rosso'], is_fem, ha_perso_tavolino)
             
-            # PREPARA I DATI DA SALVARE (Prende Categoria e Prezzo dal JSON)
             dati_da_salvare = {
                 'nome': mappa_giocatori[nome_db]['nome_originale'],
                 'categoria': mappa_giocatori[nome_db]['categoria'],
@@ -140,7 +141,7 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa_giocatori):
             }
             
             doc_ref.set(dati_da_salvare, merge=True)
-            print(f"  -> Aggiunto a Firebase: {nome_db} | {mappa_giocatori[nome_db]['categoria']} | (G{giornata}): {voto} pt")
+            print(f"  -> Aggiornato in Firebase: {nome_db} | (G{giornata}): {voto} pt")
 
     except Exception as e:
         print(f"Errore referto {url}: {e}")
@@ -193,7 +194,7 @@ def recupera_e_analizza(db, mappa_giocatori):
             print(f"Errore Campionato {camp_id}: {e}")
 
 if __name__ == "__main__":
-    print("Avvio FantaHitball Bot (Integrazione JSON Locale)...")
+    print("Avvio FantaHitball Bot (Correzione Squadre Casa/Trasferta)...")
     mappa = carica_anagrafica_locale()
     
     if not mappa:
