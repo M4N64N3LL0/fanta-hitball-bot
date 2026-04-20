@@ -45,7 +45,6 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         return {}
 
 def scarica_stato_firebase(db):
-    print(">>> Recupero stato attuale da Firebase in RAM...")
     stato = {}
     docs = db.collection('giocatori').stream()
     for doc in docs:
@@ -70,9 +69,7 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
         tavolino = soup.find(string=re.compile(r'vinta a tavolino', re.I)) is not None
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         
-        if len(liste_squadre) < 2: 
-            print(f"      [!] Attenzione: Referto G{giornata} strutturato male o incompleto.")
-            return
+        if len(liste_squadre) < 2: return
 
         giocatori_match = []
         def estrai(ul_node, is_casa):
@@ -92,16 +89,8 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
         estrai(liste_squadre[0], True)
         estrai(liste_squadre[1], False)
 
-        if not giocatori_match:
-            print(f"      [!] Referto G{giornata} aperto, ma non ci sono le statistiche dei giocatori!")
-            return
-
         for g in giocatori_match:
-            if g['nome'] not in mappa: 
-                continue
-            
-            # ---> HO RIMOSSO IL FRENO SICURO <---
-            # Ora se il giocatore è nella mappa locale, sovrascriverà sempre il voto su Firebase
+            if g['nome'] not in mappa: continue
 
             is_fem = g['nome'] in QUOTE_ROSA_FEM
             fatti = tot_casa if g['is_casa'] else tot_trasf
@@ -109,16 +98,17 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
             tav_match = tavolino and ((g['is_casa'] and tot_casa == 0) or (not g['is_casa'] and tot_trasf == 0))
             voto = calcola_punteggio_fanta(g['hits'], g['autohits'], fatti, subiti, g['giallo'], g['rosso'], is_fem, tav_match)
             
+            # IL FIX E' QUI: Mettiamo il dato DENTRO la mappa punti_giornate
             db.collection('giocatori').document(g['nome']).set({
                 'nome': mappa[g['nome']]['nome_originale'],
                 'categoria': mappa[g['nome']]['categoria'],
                 'prezzo': mappa[g['nome']]['prezzo'],
-                f'punti_giornate.{giornata}': voto
+                'punti_giornate': {
+                    str(giornata): voto
+                }
             }, merge=True)
             
-            if g['nome'] not in stato_db: stato_db[g['nome']] = {}
-            stato_db[g['nome']][str(giornata)] = voto
-            print(f"      [OK] Scritto/Aggiornato {g['nome']} | G{giornata}: {voto}pt")
+            print(f"      [OK] Salvato correttamente DENTRO la mappa {g['nome']} | G{giornata}: {voto}pt")
 
     except Exception as e:
         print(f"      [ERR] {e}")
@@ -137,32 +127,25 @@ def recupera_e_analizza(db, mappa, stato_db):
             links = [a for a in soup.find_all('a', href=True) if 'match_id=' in a['href'] or 'referto_id=' in a['href']]
             
             for i, a_tag in enumerate(links, 1):
-                
-                # --- SCUDO PARTITE LIVE ---
                 testo_tasto = a_tag.get_text(strip=True).lower()
                 if "live" in testo_tasto or "in corso" in testo_tasto:
-                    print(f"   [{i}/{len(links)}] Partita LIVE ignorata (evito voti parziali)")
                     continue
 
-                # Trova giornata
-                giornata = 1
+                giornata = 0
                 curr = a_tag
                 while curr:
                     curr = curr.find_previous(['h1', 'h2', 'h3', 'h4', 'strong', 'b', 'div'])
                     if curr:
                         t_g = curr.get_text(strip=True)
-                        mg = re.search(r'(\d+)[\^°\s]*Giornata|Giornata\s+(\d+)', t_g, re.I)
+                        # Cerca numeri vicini a "Giornata" o "G."
+                        mg = re.search(r'(\d+)[\^°\s]*Giornata|Giornata\s+(\d+)|G\.\s*(\d+)|(\d+)°\s*G', t_g, re.I)
                         if mg:
-                            giornata = int(mg.group(1) or mg.group(2))
+                            giornata = int(next(g for g in mg.groups() if g is not None))
                             break
-                
-                # ==========================================
-                # --- FILTRO GIORNATE (16, 17, 18) ---
-                # ==========================================
+
+                # Se non trova la giornata, la ignora per sicurezza
                 if giornata not in [16, 17, 18]:
-                    print(f"   [{i}/{len(links)}] Salto G{giornata} (Fuori range 16-18)")
                     continue
-                # ==========================================
                 
                 riga = a_tag
                 for _ in range(5):
@@ -171,7 +154,7 @@ def recupera_e_analizza(db, mappa, stato_db):
                         if "Risultato:" in riga.get_text(): break
                 m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', riga.get_text())
                 if m_ris:
-                    print(f"   [{i}/{len(links)}] Apertura Referto G{giornata}...")
+                    print(f"   [{i}/{len(links)}] Trovata G{giornata}, avvio elaborazione...")
                     processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), giornata, int(m_ris.group(1)), int(m_ris.group(2)), db, mappa, stato_db)
         
         except Exception as e:
