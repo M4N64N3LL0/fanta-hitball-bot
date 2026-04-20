@@ -148,6 +148,14 @@ def recupera_e_analizza(db, mappa, stato_db):
                             giornata = int(mg.group(1) or mg.group(2))
                             break
                 
+                # ==========================================
+                # --- NUOVO FILTRO GIORNATE (16, 17, 18) ---
+                # ==========================================
+                if giornata not in [16, 17, 18]:
+                    print(f"   [{i}/{len(links)}] Salto G{giornata} (Fuori range 16-18)")
+                    continue
+                # ==========================================
+                
                 riga = a_tag
                 for _ in range(5):
                     if riga.parent:
