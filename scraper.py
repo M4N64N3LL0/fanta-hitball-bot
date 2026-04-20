@@ -44,6 +44,28 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
     except:
         return {}
 
+def inizializza_database_pulito(db, mappa):
+    print("\n>>> RICOSTRUZIONE DATABASE DA ZERO IN CORSO...")
+    batch = db.batch()
+    count = 0
+    for nome_id, info in mappa.items():
+        doc_ref = db.collection('giocatori').document(nome_id)
+        batch.set(doc_ref, {
+            'nome': info['nome_originale'],
+            'categoria': info['categoria'],
+            'prezzo': info['prezzo'],
+            'punti_giornate': {}  # <--- Crea la cartella vuota in modo PERFETTO per l'app
+        })
+        count += 1
+        # Firebase accetta blocchi di massimo 500 scritture
+        if count % 400 == 0:
+            batch.commit()
+            batch = db.batch()
+            
+    if count % 400 != 0:
+        batch.commit()
+    print(f">>> {count} giocatori creati nel database in modo immacolato.\n")
+
 def scarica_stato_firebase(db):
     stato = {}
     docs = db.collection('giocatori').stream()
@@ -98,17 +120,13 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
             tav_match = tavolino and ((g['is_casa'] and tot_casa == 0) or (not g['is_casa'] and tot_trasf == 0))
             voto = calcola_punteggio_fanta(g['hits'], g['autohits'], fatti, subiti, g['giallo'], g['rosso'], is_fem, tav_match)
             
-            # IL FIX E' QUI: Mettiamo il dato DENTRO la mappa punti_giornate
             db.collection('giocatori').document(g['nome']).set({
-                'nome': mappa[g['nome']]['nome_originale'],
-                'categoria': mappa[g['nome']]['categoria'],
-                'prezzo': mappa[g['nome']]['prezzo'],
                 'punti_giornate': {
                     str(giornata): voto
                 }
             }, merge=True)
             
-            print(f"      [OK] Salvato correttamente DENTRO la mappa {g['nome']} | G{giornata}: {voto}pt")
+            print(f"      [OK] Salvato {g['nome']} | G{giornata}: {voto}pt")
 
     except Exception as e:
         print(f"      [ERR] {e}")
@@ -137,13 +155,11 @@ def recupera_e_analizza(db, mappa, stato_db):
                     curr = curr.find_previous(['h1', 'h2', 'h3', 'h4', 'strong', 'b', 'div'])
                     if curr:
                         t_g = curr.get_text(strip=True)
-                        # Cerca numeri vicini a "Giornata" o "G."
                         mg = re.search(r'(\d+)[\^°\s]*Giornata|Giornata\s+(\d+)|G\.\s*(\d+)|(\d+)°\s*G', t_g, re.I)
                         if mg:
                             giornata = int(next(g for g in mg.groups() if g is not None))
                             break
 
-                # Se non trova la giornata, la ignora per sicurezza
                 if giornata not in [16, 17, 18]:
                     continue
                 
@@ -164,6 +180,12 @@ if __name__ == "__main__":
     mappa_g = carica_anagrafica_locale()
     if mappa_g:
         db_fs = inizializza_firebase()
+        
+        # 1. Spiana e ricostruisce la base perfetta
+        inizializza_database_pulito(db_fs, mappa_g)
+        
+        # 2. Scarica lo stato e infila i punti
         stato_attuale = scarica_stato_firebase(db_fs)
         recupera_e_analizza(db_fs, mappa_g, stato_attuale)
+        
     print("\n>>> TUTTO AGGIORNATO E AL SICURO.")
