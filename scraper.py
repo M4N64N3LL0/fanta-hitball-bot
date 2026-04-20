@@ -69,7 +69,10 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
         soup = BeautifulSoup(res.text, 'html.parser')
         tavolino = soup.find(string=re.compile(r'vinta a tavolino', re.I)) is not None
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
-        if len(liste_squadre) < 2: return
+        
+        if len(liste_squadre) < 2: 
+            print(f"      [!] Attenzione: Referto G{giornata} strutturato male o incompleto.")
+            return
 
         giocatori_match = []
         def estrai(ul_node, is_casa):
@@ -89,11 +92,16 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
         estrai(liste_squadre[0], True)
         estrai(liste_squadre[1], False)
 
+        if not giocatori_match:
+            print(f"      [!] Referto G{giornata} aperto, ma non ci sono le statistiche dei giocatori!")
+            return
+
         for g in giocatori_match:
-            if g['nome'] not in mappa: continue
+            if g['nome'] not in mappa: 
+                continue
             
-            # IL FRENO SICURO: Controlla solo se QUESTO giocatore ha già il voto
-            if g['nome'] in stato_db and str(giornata) in stato_db[g['nome']]: continue
+            # ---> HO RIMOSSO IL FRENO SICURO <---
+            # Ora se il giocatore è nella mappa locale, sovrascriverà sempre il voto su Firebase
 
             is_fem = g['nome'] in QUOTE_ROSA_FEM
             fatti = tot_casa if g['is_casa'] else tot_trasf
@@ -110,7 +118,7 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
             
             if g['nome'] not in stato_db: stato_db[g['nome']] = {}
             stato_db[g['nome']][str(giornata)] = voto
-            print(f"      [OK] Scritto {g['nome']} | G{giornata}: {voto}pt")
+            print(f"      [OK] Scritto/Aggiornato {g['nome']} | G{giornata}: {voto}pt")
 
     except Exception as e:
         print(f"      [ERR] {e}")
@@ -149,7 +157,7 @@ def recupera_e_analizza(db, mappa, stato_db):
                             break
                 
                 # ==========================================
-                # --- NUOVO FILTRO GIORNATE (16, 17, 18) ---
+                # --- FILTRO GIORNATE (16, 17, 18) ---
                 # ==========================================
                 if giornata not in [16, 17, 18]:
                     print(f"   [{i}/{len(links)}] Salto G{giornata} (Fuori range 16-18)")
