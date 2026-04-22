@@ -47,10 +47,6 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         print(f">>> ERRORE FATALE: Non riesco a caricare i giocatori! Motivo: {e}")
         return {}
 
-def inizializza_database_pulito(db, mappa):
-    print("\n>>> FUNZIONE DI RESET CHIAMATA (MA DISATTIVATA NEL MAIN)")
-    pass
-
 def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, is_fem, tav):
     p_base = (punti_tiri * 2) if is_fem else punti_tiri
     malus_auto = -(autohits * 1)
@@ -62,10 +58,24 @@ def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, 
     malus_disc = (-10 if giallo else 0) + (-20 if rosso else 0) + (-20 if tav else 0)
     return p_base + malus_auto + bonus_att + bonus_def + malus_disc
 
-def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa):
+def processa_referto(url, tot_casa, tot_trasf, db, mappa):
     try:
         res = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(res.text, 'html.parser')
+        
+        # --- NOVITÀ: CERCA LA DATA DENTRO IL REFERTO ---
+        data_match = "0000-00-00"
+        d_elem = soup.find(string=re.compile(r'\d{2}-\d{2}-\d{4}'))
+        if d_elem:
+            m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', d_elem)
+            if m_data:
+                # La salviamo come YYYY-MM-DD così Firebase la ordina da sola cronologicamente
+                data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
+        
+        if data_match == "0000-00-00":
+            print("      [SKIP] Impossibile trovare la data in questo referto.")
+            return
+
         tavolino = soup.find(string=re.compile(r'vinta a tavolino', re.I)) is not None
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         if len(liste_squadre) < 2: return
@@ -96,11 +106,12 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa):
             tav_match = tavolino and ((g['is_casa'] and tot_casa == 0) or (not g['is_casa'] and tot_trasf == 0))
             voto = calcola_punteggio_fanta(g['punti_tiri'], g['autohits'], fatti, subiti, g['giallo'], g['rosso'], is_fem, tav_match)
             
-            # MERGE=TRUE: Aggiorna i punti senza cancellare quelli vecchi
+            # ATTENZIONE: Usa la data come chiave, non più la giornata!
             db.collection('giocatori').document(g['nome']).set({
-                'punti_giornate': { str(giornata): voto }
+                'punti_date': { data_match: voto } 
             }, merge=True)
-            print(f"      [OK] {g['nome']} | G{giornata}: {voto}pt")
+            
+            print(f"      [OK] {g['nome']} | {data_match} : {voto}pt")
 
     except Exception as e:
         print(f"      [ERR] {e}")
@@ -116,29 +127,10 @@ def recupera_e_analizza(db, mappa):
             soup = BeautifulSoup(res.text, 'html.parser')
             links = [a for a in soup.find_all('a', href=True) if 'match_id=' in a['href'] or 'referto_id=' in a['href']]
             
-            print(f"   -> Trovati {len(links)} link potenziali in questa categoria.")
+            print(f"   -> Trovati {len(links)} referti potenziali.")
             
             for i, a_tag in enumerate(links, 1):
-                testo_link = a_tag.get_text().lower()
-                if any(x in testo_link for x in ["live", "in corso"]): 
-                    print(f"   [SCARTATA] Partita in corso/live.")
-                    continue
-                
-                giornata = 0
-                curr = a_tag
-                while curr:
-                    curr = curr.find_previous(['h1', 'h2', 'h3', 'h4', 'strong', 'b', 'div'])
-                    if curr:
-                        t_g = curr.get_text(strip=True)
-                        mg = re.search(r'(\d+)[\^°\s]*Giornata|Giornata\s+(\d+)|G\.\s*(\d+)|(\d+)°\s*G', t_g, re.I)
-                        if mg:
-                            giornata = int(next(g for g in mg.groups() if g is not None))
-                            break
-                
-                if giornata == 0: 
-                    print(f"   [SCARTATA] Non trovo la parola 'Giornata' vicino al link.")
-                    continue
-                
+                # Guarda 5 righe sopra il bottone per trovare "Risultato: X-Y"
                 riga = a_tag
                 for _ in range(5):
                     if riga.parent:
@@ -146,26 +138,22 @@ def recupera_e_analizza(db, mappa):
                         if "Risultato:" in riga.get_text(): break
                         
                 m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', riga.get_text())
-                
                 if m_ris:
-                    print(f"   [{i}/{len(links)}] Scarico i voti della G{giornata} (Ris: {m_ris.group(1)}-{m_ris.group(2)})...")
-                    processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), giornata, int(m_ris.group(1)), int(m_ris.group(2)), db, mappa)
-                else:
-                    print(f"   [SCARTATA G{giornata}] Trovo la giornata ma NON trovo la parola 'Risultato: X-Y'.")
+                    tot_casa = int(m_ris.group(1))
+                    tot_trasf = int(m_ris.group(2))
+                    url_match = "https://referto.plvhitball.it/" + a_tag['href'].lstrip('/')
+                    print(f"   [{i}/{len(links)}] Entro nel referto (Ris: {tot_casa}-{tot_trasf})...")
+                    processa_referto(url_match, tot_casa, tot_trasf, db, mappa)
                     
         except Exception as e:
             print(f">>> Errore durante la scansione della categoria: {e}")
 
 if __name__ == "__main__":
-    print(">>> AVVIO BOT FANTAHITBALL...")
+    print(">>> AVVIO BOT FANTAHITBALL (MODALITÀ DATE)...")
     mappa_g = carica_anagrafica_locale()
-    
-    # Se la mappa è vuota (es. file json non trovato), il bot si ferma qui
     if mappa_g:
         db_fs = inizializza_firebase()
-        # Funzione di reset bloccata per sicurezza
-        # inizializza_database_pulito(db_fs, mappa_g)
         recupera_e_analizza(db_fs, mappa_g)
         print("\n>>> AGGIORNAMENTO COMPLETATO CON SUCCESSO.")
     else:
-        print("\n>>> BOT FERMATO: Nessun giocatore caricato dall'anagrafica locale.")
+        print("\n>>> BOT FERMATO: Nessun giocatore trovato.")
