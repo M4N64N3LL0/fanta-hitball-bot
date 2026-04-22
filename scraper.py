@@ -28,6 +28,7 @@ def inizializza_firebase():
     return firestore.client()
 
 def carica_anagrafica_locale(percorso_file="giocatori.json"):
+    print(f">>> Cerco il file dei giocatori: {percorso_file}")
     try:
         with open(percorso_file, 'r', encoding='utf-8') as f:
             dati = json.load(f)
@@ -40,14 +41,14 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
                 'prezzo': g['prezzo'],
                 'nome_originale': g['nome_reale']
             }
+        print(f">>> TROVATI {len(mappa)} GIOCATORI! Avvio la scansione...")
         return mappa
-    except:
+    except Exception as e:
+        print(f">>> ERRORE FATALE: Non riesco a caricare i giocatori! Motivo: {e}")
         return {}
 
-# Lasciamo la definizione della funzione, così non dà errore 'NameError'
 def inizializza_database_pulito(db, mappa):
     print("\n>>> FUNZIONE DI RESET CHIAMATA (MA DISATTIVATA NEL MAIN)")
-    # Se vuoi resettare tutto in futuro, scommetta la riga nel main.
     pass
 
 def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, is_fem, tav):
@@ -95,7 +96,7 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa):
             tav_match = tavolino and ((g['is_casa'] and tot_casa == 0) or (not g['is_casa'] and tot_trasf == 0))
             voto = calcola_punteggio_fanta(g['punti_tiri'], g['autohits'], fatti, subiti, g['giallo'], g['rosso'], is_fem, tav_match)
             
-            # MERGE=TRUE: Fondamentale per non cancellare le altre giornate
+            # MERGE=TRUE: Aggiorna i punti senza cancellare quelli vecchi
             db.collection('giocatori').document(g['nome']).set({
                 'punti_giornate': { str(giornata): voto }
             }, merge=True)
@@ -127,7 +128,6 @@ def recupera_e_analizza(db, mappa):
                             giornata = int(next(g for g in mg.groups() if g is not None))
                             break
                 
-                # Accettiamo tutte le giornate caricate sul sito
                 if giornata == 0: continue
                 
                 riga = a_tag
@@ -142,10 +142,15 @@ def recupera_e_analizza(db, mappa):
             print(f">>> Errore: {e}")
 
 if __name__ == "__main__":
+    print(">>> AVVIO BOT FANTAHITBALL...")
     mappa_g = carica_anagrafica_locale()
+    
+    # Se la mappa è vuota (es. file json non trovato), il bot si ferma qui
     if mappa_g:
         db_fs = inizializza_firebase()
-        # LA RIGA SOTTO È COMMENTATA: Così non cancella mai i punti esistenti!
+        # Funzione di reset bloccata per sicurezza
         # inizializza_database_pulito(db_fs, mappa_g)
         recupera_e_analizza(db_fs, mappa_g)
-    print("\n>>> AGGIORNAMENTO COMPLETATO.")
+        print("\n>>> AGGIORNAMENTO COMPLETATO CON SUCCESSO.")
+    else:
+        print("\n>>> BOT FERMATO: Nessun giocatore caricato dall'anagrafica locale.")
