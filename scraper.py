@@ -44,7 +44,7 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
     except:
         return {}
 
-def inizializza_database_pulito(db, mappa):
+#def inizializza_database_pulito(db, mappa):
     print("\n>>> RICOSTRUZIONE DATABASE DA ZERO IN CORSO...")
     batch = db.batch()
     count = 0
