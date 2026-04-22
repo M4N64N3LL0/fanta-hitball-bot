@@ -110,13 +110,19 @@ def recupera_e_analizza(db, mappa):
     for camp_id in ID_CAMPIONATI:
         cat_label = cat_map.get(camp_id, "")
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
-        print(f"\n>>> SCANSIONE {cat_label}")
+        print(f"\n>>> SCANSIONE {cat_label} (ID: {camp_id})")
         try:
             res = requests.get(url_camp, headers=HEADERS, timeout=15)
             soup = BeautifulSoup(res.text, 'html.parser')
             links = [a for a in soup.find_all('a', href=True) if 'match_id=' in a['href'] or 'referto_id=' in a['href']]
-            for a_tag in links:
-                if any(x in a_tag.get_text().lower() for x in ["live", "in corso"]): continue
+            
+            print(f"   -> Trovati {len(links)} link potenziali in questa categoria.")
+            
+            for i, a_tag in enumerate(links, 1):
+                testo_link = a_tag.get_text().lower()
+                if any(x in testo_link for x in ["live", "in corso"]): 
+                    continue
+                
                 giornata = 0
                 curr = a_tag
                 while curr:
@@ -128,18 +134,27 @@ def recupera_e_analizza(db, mappa):
                             giornata = int(next(g for g in mg.groups() if g is not None))
                             break
                 
-                if giornata == 0: continue
+                if giornata == 0: 
+                    # Togli il cancelletto qui sotto se vuoi vedere quante partite scarta perché non trova la giornata
+                    # print(f"   [SCARTATA] Non riesco a capire a che giornata appartiene il link: {a_tag['href']}")
+                    continue
                 
                 riga = a_tag
                 for _ in range(5):
                     if riga.parent:
                         riga = riga.parent
                         if "Risultato:" in riga.get_text(): break
+                        
                 m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', riga.get_text())
                 if m_ris:
+                    print(f"   [{i}/{len(links)}] Sto scaricando i voti della G{giornata} (Ris: {m_ris.group(1)}-{m_ris.group(2)})...")
                     processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), giornata, int(m_ris.group(1)), int(m_ris.group(2)), db, mappa)
+                else:
+                    pass
+                    # print(f"   [SCARTATA G{giornata}] Trovata giornata ma manca la parola 'Risultato: X-Y' accanto al bottone.")
+                    
         except Exception as e:
-            print(f">>> Errore: {e}")
+            print(f">>> Errore durante la scansione della categoria: {e}")
 
 if __name__ == "__main__":
     print(">>> AVVIO BOT FANTAHITBALL...")
