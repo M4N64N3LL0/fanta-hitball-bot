@@ -73,7 +73,7 @@ def scarica_stato_firebase(db):
         stato[doc.id] = doc.to_dict().get('punti_giornate', {})
     return stato
 
-def calcola_punteggio_fanta(hits, autohits, fatti, subiti, giallo, rosso, is_fem, tav):
+def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, is_fem, tav):
     p_base = (punti_tiri * 2) if is_fem else punti_tiri
     malus_auto = -(autohits * 1)
     bonus_att = 5 if fatti >= 76 else (2 if fatti >= 51 else 0)
@@ -101,12 +101,15 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
                 n_raw = re.split(r'\d+\s*x|Tot\.', testo, flags=re.I)[0].strip().upper()
                 n_clean = re.sub(r'[^A-Z\s\']', '', n_raw).strip()
                 if len(n_clean) < 3: continue
-                # Ora moltiplica la quantità di tiri per il loro valore (2 o 3)
-punti_tiri = sum(int(quantita) * int(valore) for quantita, valore in re.findall(r'(\d+)\s*x\s*(2|3)', testo))
+                
+                # --- CALCOLO PUNTI CORRETTO ---
+                punti_tiri = sum(int(q) * int(v) for q, v in re.findall(r'(\d+)\s*x\s*(2|3)', testo))
+                
                 m_auto = re.search(r'(\d+)\s*x\s*AUTOHIT', testo, re.I)
                 autohits = int(m_auto.group(1)) if m_auto else 0
                 giallo = li.find(class_=re.compile(r'warning|yellow', re.I)) is not None
                 rosso = li.find(class_=re.compile(r'danger|red', re.I)) is not None
+                
                 giocatori_match.append({"nome": n_clean, "punti_tiri": punti_tiri, "autohits": autohits, "giallo": giallo, "rosso": rosso, "is_casa": is_casa})
 
         estrai(liste_squadre[0], True)
@@ -119,6 +122,8 @@ punti_tiri = sum(int(quantita) * int(valore) for quantita, valore in re.findall(
             fatti = tot_casa if g['is_casa'] else tot_trasf
             subiti = tot_trasf if g['is_casa'] else tot_casa
             tav_match = tavolino and ((g['is_casa'] and tot_casa == 0) or (not g['is_casa'] and tot_trasf == 0))
+            
+            # --- CHIAMATA ALLA FUNZIONE CON I NUOVI PARAMETRI ---
             voto = calcola_punteggio_fanta(g['punti_tiri'], g['autohits'], fatti, subiti, g['giallo'], g['rosso'], is_fem, tav_match)
             
             db.collection('giocatori').document(g['nome']).set({
@@ -131,7 +136,6 @@ punti_tiri = sum(int(quantita) * int(valore) for quantita, valore in re.findall(
 
     except Exception as e:
         print(f"      [ERR] {e}")
-
 def recupera_e_analizza(db, mappa, stato_db):
     cat_map = {39: "A1", 41: "A2", 42: "B1", 43: "B2"}
 
