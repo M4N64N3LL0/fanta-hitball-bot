@@ -53,37 +53,33 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
     try:
         res = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(res.text, 'html.parser')
-        
-        # --- TATTICA BULLDOZER: DISTRUGGIAMO I MENU ---
-        # Creiamo una copia della pagina per estrarre Data e Giornata in sicurezza
-        soup_testo = BeautifulSoup(res.text, 'html.parser')
-        # Cancelliamo header, barre laterali e soprattutto TUTTI I LINK (<a>)
-        for tag_inutile in soup_testo.find_all(['nav', 'aside', 'header', 'footer', 'a', 'button']):
-            tag_inutile.decompose() 
-            
-        testo_pagina_pulito = soup_testo.get_text(separator=' ')
+        testo_pagina = soup.get_text(separator=' ')
         
         # 1. ESTRAZIONE DATA
         data_match = "0000-00-00"
-        m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_pagina_pulito)
+        m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_pagina)
         if m_data: 
             data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
         
-        # 2. ESTRAZIONE GIORNATA
+        # 2. ESTRAZIONE GIORNATA CHIRURGICA (Grazie agli screenshot!)
         giornata = 0
-        mg = re.search(r'(\d+)[\^°\s]*Giornata|Giornata\s+(\d+)|G\.\s*(\d+)', testo_pagina_pulito, re.I)
+        # Cerca specificamente la stringa "Giornata: 4"
+        mg = re.search(r'Giornata\s*:\s*(\d+)', testo_pagina, re.I)
         if mg:
-            giornata = int(next(g for g in mg.groups() if g is not None))
+            giornata = int(mg.group(1))
+        else:
+            # Fallback di sicurezza nel caso si dimentichino di mettere i due punti
+            mg_fallback = re.search(r'(\d+)[\^°\s]*Giornata|Giornata\s+(\d+)', testo_pagina, re.I)
+            if mg_fallback:
+                giornata = int(next(g for g in mg_fallback.groups() if g is not None))
 
-        # Se non trova la giornata o la data, ignora il referto
         if data_match == "0000-00-00" or giornata == 0: 
             print("      [SKIP] Impossibile trovare Data o Giornata valide in questa pagina.")
             return
 
-        # LA MAGIA: CHIAVE COMPOSTA (es: "2026-04-19_17")
+        # LA MAGIA: CHIAVE COMPOSTA (es: "2025-10-23_4")
         chiave_salvataggio = f"{data_match}_{giornata}"
 
-        # Usiamo il 'soup' originale (non distrutto) per leggere i giocatori
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         if len(liste_squadre) < 2: return
 
@@ -103,7 +99,7 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 
                 fatti = tot_casa if is_casa else tot_trasf
                 subiti = tot_trasf if is_casa else tot_casa
-                tavolino = "tavolino" in testo_pagina_pulito.lower()
+                tavolino = "tavolino" in testo_pagina.lower()
                 tav_match = tavolino and ((is_casa and tot_casa == 0) or (not is_casa and tot_trasf == 0))
                 
                 voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, n_clean in QUOTE_ROSA_FEM, tav_match)
