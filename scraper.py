@@ -53,25 +53,37 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
     try:
         res = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(res.text, 'html.parser')
-        testo_pagina = soup.get_text(separator=' ')
+        
+        # --- TATTICA BULLDOZER: DISTRUGGIAMO I MENU ---
+        # Creiamo una copia della pagina per estrarre Data e Giornata in sicurezza
+        soup_testo = BeautifulSoup(res.text, 'html.parser')
+        # Cancelliamo header, barre laterali e soprattutto TUTTI I LINK (<a>)
+        for tag_inutile in soup_testo.find_all(['nav', 'aside', 'header', 'footer', 'a', 'button']):
+            tag_inutile.decompose() 
+            
+        testo_pagina_pulito = soup_testo.get_text(separator=' ')
         
         # 1. ESTRAZIONE DATA
         data_match = "0000-00-00"
-        m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_pagina)
+        m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_pagina_pulito)
         if m_data: 
             data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
         
-        # 2. ESTRAZIONE GIORNATA (Cerca "Giornata 17" o "17° Giornata")
+        # 2. ESTRAZIONE GIORNATA
         giornata = 0
-        mg = re.search(r'(\d+)[\^°\s]*Giornata|Giornata\s+(\d+)', testo_pagina, re.I)
+        mg = re.search(r'(\d+)[\^°\s]*Giornata|Giornata\s+(\d+)|G\.\s*(\d+)', testo_pagina_pulito, re.I)
         if mg:
             giornata = int(next(g for g in mg.groups() if g is not None))
 
-        if data_match == "0000-00-00": return
+        # Se non trova la giornata o la data, ignora il referto
+        if data_match == "0000-00-00" or giornata == 0: 
+            print("      [SKIP] Impossibile trovare Data o Giornata valide in questa pagina.")
+            return
 
         # LA MAGIA: CHIAVE COMPOSTA (es: "2026-04-19_17")
         chiave_salvataggio = f"{data_match}_{giornata}"
 
+        # Usiamo il 'soup' originale (non distrutto) per leggere i giocatori
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         if len(liste_squadre) < 2: return
 
@@ -91,7 +103,7 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 
                 fatti = tot_casa if is_casa else tot_trasf
                 subiti = tot_trasf if is_casa else tot_casa
-                tavolino = "tavolino" in testo_pagina.lower()
+                tavolino = "tavolino" in testo_pagina_pulito.lower()
                 tav_match = tavolino and ((is_casa and tot_casa == 0) or (not is_casa and tot_trasf == 0))
                 
                 voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, n_clean in QUOTE_ROSA_FEM, tav_match)
@@ -99,6 +111,7 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 db.collection('giocatori').document(n_clean).set({
                     'punti_giornate': { chiave_salvataggio: voto }
                 }, merge=True)
+                
                 print(f"      [OK] {n_clean} | G{giornata} ({data_match}): {voto}pt")
 
         estrai_e_salva(liste_squadre[0], True)
