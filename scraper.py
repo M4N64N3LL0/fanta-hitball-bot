@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# --- 1. CONFIGURAZIONE ---
+# --- CONFIGURAZIONE ---
 ID_CAMPIONATI = [39, 41, 42, 43] 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
@@ -44,34 +44,11 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
     except:
         return {}
 
-# def inizializza_database_pulito(db, mappa):
-    print("\n>>> RICOSTRUZIONE DATABASE DA ZERO IN CORSO...")
-    batch = db.batch()
-    count = 0
-    for nome_id, info in mappa.items():
-        doc_ref = db.collection('giocatori').document(nome_id)
-        batch.set(doc_ref, {
-            'nome': info['nome_originale'],
-            'categoria': info['categoria'],
-            'prezzo': info['prezzo'],
-            'punti_giornate': {}  # <--- Crea la cartella vuota in modo PERFETTO per l'app
-        })
-        count += 1
-        # Firebase accetta blocchi di massimo 500 scritture
-        if count % 400 == 0:
-            batch.commit()
-            batch = db.batch()
-            
-    if count % 400 != 0:
-        batch.commit()
-    print(f">>> {count} giocatori creati nel database in modo immacolato.\n")
-
-def scarica_stato_firebase(db):
-    stato = {}
-    docs = db.collection('giocatori').stream()
-    for doc in docs:
-        stato[doc.id] = doc.to_dict().get('punti_giornate', {})
-    return stato
+# Lasciamo la definizione della funzione, così non dà errore 'NameError'
+def inizializza_database_pulito(db, mappa):
+    print("\n>>> FUNZIONE DI RESET CHIAMATA (MA DISATTIVATA NEL MAIN)")
+    # Se vuoi resettare tutto in futuro, scommetta la riga nel main.
+    pass
 
 def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, is_fem, tav):
     p_base = (punti_tiri * 2) if is_fem else punti_tiri
@@ -84,13 +61,12 @@ def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, 
     malus_disc = (-10 if giallo else 0) + (-20 if rosso else 0) + (-20 if tav else 0)
     return p_base + malus_auto + bonus_att + bonus_def + malus_disc
 
-def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
+def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa):
     try:
         res = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(res.text, 'html.parser')
         tavolino = soup.find(string=re.compile(r'vinta a tavolino', re.I)) is not None
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
-        
         if len(liste_squadre) < 2: return
 
         giocatori_match = []
@@ -101,15 +77,11 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
                 n_raw = re.split(r'\d+\s*x|Tot\.', testo, flags=re.I)[0].strip().upper()
                 n_clean = re.sub(r'[^A-Z\s\']', '', n_raw).strip()
                 if len(n_clean) < 3: continue
-                
-                # --- CALCOLO PUNTI CORRETTO ---
                 punti_tiri = sum(int(q) * int(v) for q, v in re.findall(r'(\d+)\s*x\s*(2|3)', testo))
-                
                 m_auto = re.search(r'(\d+)\s*x\s*AUTOHIT', testo, re.I)
                 autohits = int(m_auto.group(1)) if m_auto else 0
                 giallo = li.find(class_=re.compile(r'warning|yellow', re.I)) is not None
                 rosso = li.find(class_=re.compile(r'danger|red', re.I)) is not None
-                
                 giocatori_match.append({"nome": n_clean, "punti_tiri": punti_tiri, "autohits": autohits, "giallo": giallo, "rosso": rosso, "is_casa": is_casa})
 
         estrai(liste_squadre[0], True)
@@ -117,43 +89,33 @@ def processa_referto(url, giornata, tot_casa, tot_trasf, db, mappa, stato_db):
 
         for g in giocatori_match:
             if g['nome'] not in mappa: continue
-
             is_fem = g['nome'] in QUOTE_ROSA_FEM
             fatti = tot_casa if g['is_casa'] else tot_trasf
             subiti = tot_trasf if g['is_casa'] else tot_casa
             tav_match = tavolino and ((g['is_casa'] and tot_casa == 0) or (not g['is_casa'] and tot_trasf == 0))
-            
-            # --- CHIAMATA ALLA FUNZIONE CON I NUOVI PARAMETRI ---
             voto = calcola_punteggio_fanta(g['punti_tiri'], g['autohits'], fatti, subiti, g['giallo'], g['rosso'], is_fem, tav_match)
             
+            # MERGE=TRUE: Fondamentale per non cancellare le altre giornate
             db.collection('giocatori').document(g['nome']).set({
-                'punti_giornate': {
-                    str(giornata): voto
-                }
+                'punti_giornate': { str(giornata): voto }
             }, merge=True)
-            
-            print(f"      [OK] Salvato {g['nome']} | G{giornata}: {voto}pt")
+            print(f"      [OK] {g['nome']} | G{giornata}: {voto}pt")
 
     except Exception as e:
         print(f"      [ERR] {e}")
-def recupera_e_analizza(db, mappa, stato_db):
-    cat_map = {39: "A1", 41: "A2", 42: "B1", 43: "B2"}
 
+def recupera_e_analizza(db, mappa):
+    cat_map = {39: "A1", 41: "A2", 42: "B1", 43: "B2"}
     for camp_id in ID_CAMPIONATI:
         cat_label = cat_map.get(camp_id, "")
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
-        print(f"\n>>> SCANSIONE {cat_label} (ID: {camp_id})")
-        
+        print(f"\n>>> SCANSIONE {cat_label}")
         try:
             res = requests.get(url_camp, headers=HEADERS, timeout=15)
             soup = BeautifulSoup(res.text, 'html.parser')
             links = [a for a in soup.find_all('a', href=True) if 'match_id=' in a['href'] or 'referto_id=' in a['href']]
-            
-            for i, a_tag in enumerate(links, 1):
-                testo_tasto = a_tag.get_text(strip=True).lower()
-                if "live" in testo_tasto or "in corso" in testo_tasto:
-                    continue
-
+            for a_tag in links:
+                if any(x in a_tag.get_text().lower() for x in ["live", "in corso"]): continue
                 giornata = 0
                 curr = a_tag
                 while curr:
@@ -164,9 +126,9 @@ def recupera_e_analizza(db, mappa, stato_db):
                         if mg:
                             giornata = int(next(g for g in mg.groups() if g is not None))
                             break
-
-                if giornata not in [16, 17, 18]:
-                    continue
+                
+                # Accettiamo tutte le giornate caricate sul sito
+                if giornata == 0: continue
                 
                 riga = a_tag
                 for _ in range(5):
@@ -175,9 +137,7 @@ def recupera_e_analizza(db, mappa, stato_db):
                         if "Risultato:" in riga.get_text(): break
                 m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', riga.get_text())
                 if m_ris:
-                    print(f"   [{i}/{len(links)}] Trovata G{giornata}, avvio elaborazione...")
-                    processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), giornata, int(m_ris.group(1)), int(m_ris.group(2)), db, mappa, stato_db)
-        
+                    processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), giornata, int(m_ris.group(1)), int(m_ris.group(2)), db, mappa)
         except Exception as e:
             print(f">>> Errore: {e}")
 
@@ -185,12 +145,7 @@ if __name__ == "__main__":
     mappa_g = carica_anagrafica_locale()
     if mappa_g:
         db_fs = inizializza_firebase()
-        
-        # 1. Spiana e ricostruisce la base perfetta
-        inizializza_database_pulito(db_fs, mappa_g)
-        
-        # 2. Scarica lo stato e infila i punti
-        stato_attuale = scarica_stato_firebase(db_fs)
-        recupera_e_analizza(db_fs, mappa_g, stato_attuale)
-        
-    print("\n>>> TUTTO AGGIORNATO E AL SICURO.")
+        # LA RIGA SOTTO È COMMENTATA: Così non cancella mai i punti esistenti!
+        # inizializza_database_pulito(db_fs, mappa_g)
+        recupera_e_analizza(db_fs, mappa_g)
+    print("\n>>> AGGIORNAMENTO COMPLETATO.")
