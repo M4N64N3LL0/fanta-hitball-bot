@@ -121,6 +121,7 @@ def recupera_e_analizza(db, mappa):
             for i, a_tag in enumerate(links, 1):
                 testo_link = a_tag.get_text().lower()
                 if any(x in testo_link for x in ["live", "in corso"]): 
+                    print(f"   [SCARTATA] Partita in corso/live.")
                     continue
                 
                 giornata = 0
@@ -135,8 +136,7 @@ def recupera_e_analizza(db, mappa):
                             break
                 
                 if giornata == 0: 
-                    # Togli il cancelletto qui sotto se vuoi vedere quante partite scarta perché non trova la giornata
-                    # print(f"   [SCARTATA] Non riesco a capire a che giornata appartiene il link: {a_tag['href']}")
+                    print(f"   [SCARTATA] Non trovo la parola 'Giornata' vicino al link.")
                     continue
                 
                 riga = a_tag
@@ -146,12 +146,12 @@ def recupera_e_analizza(db, mappa):
                         if "Risultato:" in riga.get_text(): break
                         
                 m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', riga.get_text())
+                
                 if m_ris:
-                    print(f"   [{i}/{len(links)}] Sto scaricando i voti della G{giornata} (Ris: {m_ris.group(1)}-{m_ris.group(2)})...")
+                    print(f"   [{i}/{len(links)}] Scarico i voti della G{giornata} (Ris: {m_ris.group(1)}-{m_ris.group(2)})...")
                     processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), giornata, int(m_ris.group(1)), int(m_ris.group(2)), db, mappa)
                 else:
-                    pass
-                    # print(f"   [SCARTATA G{giornata}] Trovata giornata ma manca la parola 'Risultato: X-Y' accanto al bottone.")
+                    print(f"   [SCARTATA G{giornata}] Trovo la giornata ma NON trovo la parola 'Risultato: X-Y'.")
                     
         except Exception as e:
             print(f">>> Errore durante la scansione della categoria: {e}")
