@@ -6,9 +6,15 @@ from bs4 import BeautifulSoup
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# --- CONFIGURAZIONE ---
 ID_CAMPIONATI = [39, 41, 42, 43] 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+
+QUOTE_ROSA_FEM = [
+    "FEDERICA FUNNONE", "MARTINA LUPO", "SABRINA CAPITOLO", "ARIANNA VISMARA", 
+    "SABRINA ZANFRETTA", "SARA SOTTOLANO", "MARTINA BRACESCO", "ROSSELLA DE BLASIO", 
+    "CARLOTTA AMODEO", "FEDERICA AMORELLI", "ELENA PASINO", "MARA FERRARIS", 
+    "ALICE LA VERSA", "NOEMI CASTELLUCCIO", "CHIARA GILARDI"
+]
 
 def inizializza_firebase():
     if not firebase_admin._apps:
@@ -47,15 +53,24 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
     try:
         res = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(res.text, 'html.parser')
+        testo_pagina = soup.get_text(separator=' ')
         
-        # Estrazione Data (AAAA-MM-GG)
+        # 1. ESTRAZIONE DATA
         data_match = "0000-00-00"
-        d_elem = soup.find(string=re.compile(r'\d{2}-\d{2}-\d{4}'))
-        if d_elem:
-            m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', d_elem)
-            if m_data: data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
+        m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_pagina)
+        if m_data: 
+            data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
         
+        # 2. ESTRAZIONE GIORNATA (Cerca "Giornata 17" o "17° Giornata")
+        giornata = 0
+        mg = re.search(r'(\d+)[\^°\s]*Giornata|Giornata\s+(\d+)', testo_pagina, re.I)
+        if mg:
+            giornata = int(next(g for g in mg.groups() if g is not None))
+
         if data_match == "0000-00-00": return
+
+        # LA MAGIA: CHIAVE COMPOSTA (es: "2026-04-19_17")
+        chiave_salvataggio = f"{data_match}_{giornata}"
 
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         if len(liste_squadre) < 2: return
@@ -76,14 +91,15 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 
                 fatti = tot_casa if is_casa else tot_trasf
                 subiti = tot_trasf if is_casa else tot_casa
+                tavolino = "tavolino" in testo_pagina.lower()
+                tav_match = tavolino and ((is_casa and tot_casa == 0) or (not is_casa and tot_trasf == 0))
                 
-                voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, False, False)
+                voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, n_clean in QUOTE_ROSA_FEM, tav_match)
                 
-                # SALVATAGGIO CON CHIAVE DATA
                 db.collection('giocatori').document(n_clean).set({
-                    'punti_giornate': { data_match: voto }
+                    'punti_giornate': { chiave_salvataggio: voto }
                 }, merge=True)
-                print(f"      [OK] {n_clean} | {data_match}: {voto}pt")
+                print(f"      [OK] {n_clean} | G{giornata} ({data_match}): {voto}pt")
 
         estrai_e_salva(liste_squadre[0], True)
         estrai_e_salva(liste_squadre[1], False)
