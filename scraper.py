@@ -34,7 +34,12 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         for g in dati:
             n_raw = g['nome_reale'].upper()
             n_clean = re.sub(r'[^A-Z\s\']', '', n_raw).strip()
-            mappa[n_clean] = {'nome_originale': g['nome_reale']}
+            # Salviamo anche categoria e prezzo per ripristinare il mercato
+            mappa[n_clean] = {
+                'nome_originale': g['nome_reale'],
+                'categoria': g.get('categoria', 'MISTO'),
+                'prezzo': g.get('prezzo', 0)
+            }
         return mappa
     except: return {}
 
@@ -55,29 +60,15 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
         soup = BeautifulSoup(res.text, 'html.parser')
         testo_pagina = soup.get_text(separator=' ')
         
-        # 1. ESTRAZIONE DATA
         data_match = "0000-00-00"
         m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_pagina)
-        if m_data: 
-            data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
+        if m_data: data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
         
-        # 2. ESTRAZIONE GIORNATA CHIRURGICA (Grazie agli screenshot!)
         giornata = 0
-        # Cerca specificamente la stringa "Giornata: 4"
         mg = re.search(r'Giornata\s*:\s*(\d+)', testo_pagina, re.I)
-        if mg:
-            giornata = int(mg.group(1))
-        else:
-            # Fallback di sicurezza nel caso si dimentichino di mettere i due punti
-            mg_fallback = re.search(r'(\d+)[\^°\s]*Giornata|Giornata\s+(\d+)', testo_pagina, re.I)
-            if mg_fallback:
-                giornata = int(next(g for g in mg_fallback.groups() if g is not None))
+        if mg: giornata = int(mg.group(1))
 
-        if data_match == "0000-00-00" or giornata == 0: 
-            print("      [SKIP] Impossibile trovare Data o Giornata valide in questa pagina.")
-            return
-
-        # LA MAGIA: CHIAVE COMPOSTA (es: "2025-10-23_4")
+        if data_match == "0000-00-00" or giornata == 0: return
         chiave_salvataggio = f"{data_match}_{giornata}"
 
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
@@ -89,7 +80,11 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 if "x" not in testo: continue
                 n_raw = re.split(r'\d+\s*x|Tot\.', testo, flags=re.I)[0].strip().upper()
                 n_clean = re.sub(r'[^A-Z\s\']', '', n_raw).strip()
+                
                 if n_clean not in mappa: continue
+                
+                # Recuperiamo i dati dal JSON locale per il mercato
+                info_g = mappa[n_clean]
                 
                 punti_tiri = sum(int(q) * int(v) for q, v in re.findall(r'(\d+)\s*x\s*(2|3)', testo))
                 m_auto = re.search(r'(\d+)\s*x\s*AUTOHIT', testo, re.I)
@@ -104,11 +99,15 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 
                 voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, n_clean in QUOTE_ROSA_FEM, tav_match)
                 
+                # SCRITTURA COMPLETA: Punti + Categoria + Prezzo
                 db.collection('giocatori').document(n_clean).set({
+                    'nome_reale': info_g['nome_originale'],
+                    'categoria': info_g['categoria'],
+                    'prezzo': info_g['prezzo'],
                     'punti_giornate': { chiave_salvataggio: voto }
                 }, merge=True)
                 
-                print(f"      [OK] {n_clean} | G{giornata} ({data_match}): {voto}pt")
+                print(f"      [OK] {n_clean} | G{giornata} | {info_g['categoria']} {info_g['prezzo']}cr | {voto}pt")
 
         estrai_e_salva(liste_squadre[0], True)
         estrai_e_salva(liste_squadre[1], False)
