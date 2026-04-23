@@ -28,20 +28,22 @@ def inizializza_firebase():
 
 def carica_anagrafica_locale(percorso_file="giocatori.json"):
     try:
+        # Assicurati che il file si chiami esattamente come il tuo JSON (database_giocatori.json?)
         with open(percorso_file, 'r', encoding='utf-8') as f:
             dati = json.load(f)
         mappa = {}
         for g in dati:
             n_raw = g['nome_reale'].upper()
             n_clean = re.sub(r'[^A-Z\s\']', '', n_raw).strip()
-            # Salviamo anche categoria e prezzo per ripristinare il mercato
             mappa[n_clean] = {
                 'nome_originale': g['nome_reale'],
                 'categoria': g.get('categoria', 'MISTO'),
                 'prezzo': g.get('prezzo', 0)
             }
         return mappa
-    except: return {}
+    except Exception as e: 
+        print(f"Errore caricamento JSON locale: {e}")
+        return {}
 
 def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, is_fem, tav):
     p_base = (punti_tiri * 2) if is_fem else punti_tiri
@@ -64,12 +66,10 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
         m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_pagina)
         if m_data: data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
         
-        giornata = 0
-        mg = re.search(r'Giornata\s*:\s*(\d+)', testo_pagina, re.I)
-        if mg: giornata = int(mg.group(1))
-
-        if data_match == "0000-00-00" or giornata == 0: return
-        chiave_salvataggio = f"{data_match}_{giornata}"
+        if data_match == "0000-00-00": return
+        
+        # --- MODIFICA CHIAVE: SOLO DATA ---
+        chiave_salvataggio = data_match 
 
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         if len(liste_squadre) < 2: return
@@ -83,7 +83,6 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 
                 if n_clean not in mappa: continue
                 
-                # Recuperiamo i dati dal JSON locale per il mercato
                 info_g = mappa[n_clean]
                 
                 punti_tiri = sum(int(q) * int(v) for q, v in re.findall(r'(\d+)\s*x\s*(2|3)', testo))
@@ -99,7 +98,7 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 
                 voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, n_clean in QUOTE_ROSA_FEM, tav_match)
                 
-                # SCRITTURA COMPLETA: Punti + Categoria + Prezzo
+                # SCRITTURA: Usiamo n_clean come ID documento per coerenza con la squadra dell'utente
                 db.collection('giocatori').document(n_clean).set({
                     'nome_reale': info_g['nome_originale'],
                     'categoria': info_g['categoria'],
@@ -107,7 +106,7 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                     'punti_giornate': { chiave_salvataggio: voto }
                 }, merge=True)
                 
-                print(f"      [OK] {n_clean} | G{giornata} | {info_g['categoria']} {info_g['prezzo']}cr | {voto}pt")
+                print(f"      [OK] {n_clean} | {chiave_salvataggio} | {voto}pt")
 
         estrai_e_salva(liste_squadre[0], True)
         estrai_e_salva(liste_squadre[1], False)
@@ -133,8 +132,9 @@ def recupera_e_analizza(db, mappa):
         except Exception as e: print(f">>> Errore: {e}")
 
 if __name__ == "__main__":
-    mappa_g = carica_anagrafica_locale()
+    # Assicurati che il nome del file JSON qui sotto sia corretto
+    mappa_g = carica_anagrafica_locale("database_giocatori.json")
     if mappa_g:
         db_fs = inizializza_firebase()
         recupera_e_analizza(db_fs, mappa_g)
-        print("\n>>> AGGIORNAMENTO COMPLETATO.")
+        print("\n>>> AGGIORNAMENTO COMPLETATO CON FORMATO DATA STANDARD.")
