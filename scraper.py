@@ -28,7 +28,6 @@ def inizializza_firebase():
 
 def carica_anagrafica_locale(percorso_file="giocatori.json"):
     try:
-        # Assicurati che il file si chiami esattamente come il tuo JSON (giocatori.json?)
         with open(percorso_file, 'r', encoding='utf-8') as f:
             dati = json.load(f)
         mappa = {}
@@ -68,7 +67,7 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
         
         if data_match == "0000-00-00": return
         
-        # --- MODIFICA CHIAVE: SOLO DATA ---
+        # CHIAVE DI SALVATAGGIO: SOLO DATA (Es. 2026-04-23)
         chiave_salvataggio = data_match 
 
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
@@ -84,6 +83,7 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 if n_clean not in mappa: continue
                 
                 info_g = mappa[n_clean]
+                is_femmina = n_clean in QUOTE_ROSA_FEM
                 
                 punti_tiri = sum(int(q) * int(v) for q, v in re.findall(r'(\d+)\s*x\s*(2|3)', testo))
                 m_auto = re.search(r'(\d+)\s*x\s*AUTOHIT', testo, re.I)
@@ -96,13 +96,16 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 tavolino = "tavolino" in testo_pagina.lower()
                 tav_match = tavolino and ((is_casa and tot_casa == 0) or (not is_casa and tot_trasf == 0))
                 
-                voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, n_clean in QUOTE_ROSA_FEM, tav_match)
+                voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, is_femmina, tav_match)
                 
-                # SCRITTURA: Usiamo n_clean come ID documento per coerenza con la squadra dell'utente
+                # FORZA LA CATEGORIA "FEM" NEL DATABASE E AGGIUNGE IL FLAG
+                categoria_da_salvare = "FEM" if is_femmina else info_g['categoria']
+
                 db.collection('giocatori').document(n_clean).set({
                     'nome_reale': info_g['nome_originale'],
-                    'categoria': info_g['categoria'],
+                    'categoria': categoria_da_salvare,
                     'prezzo': info_g['prezzo'],
+                    'is_fem': is_femmina,
                     'punti_giornate': { chiave_salvataggio: voto }
                 }, merge=True)
                 
@@ -132,9 +135,8 @@ def recupera_e_analizza(db, mappa):
         except Exception as e: print(f">>> Errore: {e}")
 
 if __name__ == "__main__":
-    # Assicurati che il nome del file JSON qui sotto sia corretto
     mappa_g = carica_anagrafica_locale("giocatori.json")
     if mappa_g:
         db_fs = inizializza_firebase()
         recupera_e_analizza(db_fs, mappa_g)
-        print("\n>>> AGGIORNAMENTO COMPLETATO CON FORMATO DATA STANDARD.")
+        print("\n>>> AGGIORNAMENTO COMPLETATO CON FORMATO DATA E CATEGORIA FEM.")
