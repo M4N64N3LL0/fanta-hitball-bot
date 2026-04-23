@@ -28,7 +28,7 @@ def inizializza_firebase():
 
 def carica_anagrafica_locale(percorso_file="giocatori.json"):
     try:
-        # Assicurati che il file si chiami esattamente come il tuo JSON (database_giocatori.json?)
+        # Assicurati che il file si chiami esattamente come il tuo JSON (giocatori.json?)
         with open(percorso_file, 'r', encoding='utf-8') as f:
             dati = json.load(f)
         mappa = {}
@@ -133,7 +133,7 @@ def recupera_e_analizza(db, mappa):
 
 if __name__ == "__main__":
     # Assicurati che il nome del file JSON qui sotto sia corretto
-    mappa_g = carica_anagrafica_locale("database_giocatori.json")
+    mappa_g = carica_anagrafica_locale("giocatori.json")
     if mappa_g:
         db_fs = inizializza_firebase()
         recupera_e_analizza(db_fs, mappa_g)
