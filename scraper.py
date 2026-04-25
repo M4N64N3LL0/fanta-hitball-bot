@@ -33,9 +33,7 @@ def inizializza_firebase():
         firebase_admin.initialize_app(cred)
     return firestore.client()
 
-# --- NUOVA FUNZIONE: RIMUOVE GLI ACCENTI ---
 def rimuovi_accenti(testo):
-    # Trasforma ad esempio "Niccolò" in "Niccolo"
     return unicodedata.normalize('NFKD', testo).encode('ASCII', 'ignore').decode('utf-8')
 
 def carica_anagrafica_locale(percorso_file="giocatori.json"):
@@ -45,9 +43,7 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         mappa = {}
         for g in dati:
             nome_originale = g['nome_reale'].upper()
-            # 1. Rimuoviamo gli accenti
             nome_senza_accenti = rimuovi_accenti(nome_originale)
-            # 2. Sostituiamo apostrofi e caratteri strani con spazi
             nome_clean = re.sub(r'[^A-Z\s]', ' ', nome_senza_accenti).strip()
             parole = frozenset(nome_clean.split())
             
@@ -96,7 +92,6 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
             for li in ul_node.find_all('li', class_=re.compile(r'list-group-item', re.I)):
                 testo_originale = li.get_text(separator=' ', strip=True)
                 
-                # --- PULIZIA WEB: Applichiamo la stessa logica del JSON ---
                 testo_senza_accenti = rimuovi_accenti(testo_originale.upper())
                 testo_clean = re.sub(r'[^A-Z\s]', ' ', testo_senza_accenti)
                 parole_nella_riga = testo_clean.split()
@@ -137,15 +132,14 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
                 
                 if voto_esistente == voto:
                     counter['risparmiate'] += 1
-              print(f"      [GIA' PRESENTE] {id_fb} ha già {voto}pt, salto.", flush=True)
+                    print(f"      [GIA' PRESENTE] {id_fb} ha già {voto}pt per questa data, salto.", flush=True)
                 else:
-                    # --- QUI SCRIVIAMO TUTTO SU FIREBASE ---
                     db.collection('giocatori').document(id_fb).set({
                         'nome_reale': info_g['nome_display'],
                         'categoria': info_g['categoria'],
                         'prezzo': info_g['prezzo'],
-                        'squadra': info_g['squadra'], # Aggiunta squadra
-                        'is_fem': id_fb in QUOTE_ROSA_FEM, # Aggiunta is_fem
+                        'squadra': info_g['squadra'],
+                        'is_fem': id_fb in QUOTE_ROSA_FEM,
                         'punti_giornate': { data_match: voto }
                     }, merge=True)
                     print(f"      [UPDATE] Trovato e aggiornato: {id_fb} | {voto}pt", flush=True)
