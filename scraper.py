@@ -3,11 +3,11 @@ import sys
 import json
 import requests
 import re
+import unicodedata
 from bs4 import BeautifulSoup
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# FORZA PYTHON A STAMPARE IN TEMPO REALE SU GITHUB ACTIONS
 try:
     sys.stdout.reconfigure(line_buffering=True)
 except AttributeError:
@@ -33,6 +33,11 @@ def inizializza_firebase():
         firebase_admin.initialize_app(cred)
     return firestore.client()
 
+# --- NUOVA FUNZIONE: RIMUOVE GLI ACCENTI ---
+def rimuovi_accenti(testo):
+    # Trasforma ad esempio "Niccolò" in "Niccolo"
+    return unicodedata.normalize('NFKD', testo).encode('ASCII', 'ignore').decode('utf-8')
+
 def carica_anagrafica_locale(percorso_file="giocatori.json"):
     try:
         with open(percorso_file, 'r', encoding='utf-8') as f:
@@ -40,14 +45,18 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         mappa = {}
         for g in dati:
             nome_originale = g['nome_reale'].upper()
-            # IL FIX È QUI: Sostituiamo caratteri speciali e apostrofi con SPAZI
-            nome_clean = re.sub(r'[^A-Z\s]', ' ', nome_originale).strip()
+            # 1. Rimuoviamo gli accenti
+            nome_senza_accenti = rimuovi_accenti(nome_originale)
+            # 2. Sostituiamo apostrofi e caratteri strani con spazi
+            nome_clean = re.sub(r'[^A-Z\s]', ' ', nome_senza_accenti).strip()
             parole = frozenset(nome_clean.split())
+            
             mappa[parole] = {
                 'id_documento': nome_originale,
                 'nome_display': g['nome_reale'],
                 'categoria': g.get('categoria', 'MISTO'),
-                'prezzo': g.get('prezzo', 0)
+                'prezzo': g.get('prezzo', 0),
+                'squadra': g.get('squadra', '')
             }
         return mappa
     except Exception as e: 
@@ -87,8 +96,9 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
             for li in ul_node.find_all('li', class_=re.compile(r'list-group-item', re.I)):
                 testo_originale = li.get_text(separator=' ', strip=True)
                 
-                # IL FIX È QUI: Coerenza perfetta con la pulizia del JSON
-                testo_clean = re.sub(r'[^A-Z\s]', ' ', testo_originale.upper())
+                # --- PULIZIA WEB: Applichiamo la stessa logica del JSON ---
+                testo_senza_accenti = rimuovi_accenti(testo_originale.upper())
+                testo_clean = re.sub(r'[^A-Z\s]', ' ', testo_senza_accenti)
                 parole_nella_riga = testo_clean.split()
 
                 id_fb = None
@@ -101,7 +111,6 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
                         break
                 
                 if not id_fb:
-                    # Filtriamo scritte inutili come "Mancata presentazione" o penalità per non intralciare i log
                     if "PENALIT" not in testo_originale.upper() and "MANCATA" not in testo_originale.upper():
                         print(f"      [SKIP] Nessuno dei tuoi giocatori è qui: '{testo_originale}'", flush=True)
                     continue
@@ -128,11 +137,15 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
                 
                 if voto_esistente == voto:
                     counter['risparmiate'] += 1
+              print(f"      [GIA' PRESENTE] {id_fb} ha già {voto}pt, salto.", flush=True)
                 else:
+                    # --- QUI SCRIVIAMO TUTTO SU FIREBASE ---
                     db.collection('giocatori').document(id_fb).set({
                         'nome_reale': info_g['nome_display'],
                         'categoria': info_g['categoria'],
                         'prezzo': info_g['prezzo'],
+                        'squadra': info_g['squadra'], # Aggiunta squadra
+                        'is_fem': id_fb in QUOTE_ROSA_FEM, # Aggiunta is_fem
                         'punti_giornate': { data_match: voto }
                     }, merge=True)
                     print(f"      [UPDATE] Trovato e aggiornato: {id_fb} | {voto}pt", flush=True)
@@ -140,7 +153,7 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
 
         estrai_e_salva(liste_squadre[0], True)
         estrai_e_salva(liste_squadre[1], False)
-    except Exception as e: print(f"      [ERR] {e}", flush=True)
+    except Exception as e: print(f"      [ERR] Referto: {e}", flush=True)
 
 def recupera_e_analizza(db, mappa):
     stato_fb = scarica_stato_firebase(db)
