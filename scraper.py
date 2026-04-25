@@ -46,7 +46,7 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
                 'nome_display': g['nome_reale'],
                 'categoria': g.get('categoria', 'MISTO'),
                 'prezzo': g.get('prezzo', 0),
-                'squadra': g.get('squadra', '').strip(" :-") # PULIZIA PREVENTIVA
+                'squadra': g.get('squadra', '').strip(" :-") 
             }
         return mappa
     except Exception as e: 
@@ -71,27 +71,39 @@ def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, 
 
 def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
     try:
-        res = requests.get(url, headers=HEADERS, timeout=15)
+        # PROTEZIONE DA CRASH SITO LENTO
+        res = requests.get(url, headers=HEADERS, timeout=10)
+        res.raise_for_status()
         soup = BeautifulSoup(res.text, 'html.parser')
         testo_pagina = soup.get_text(separator=' ')
         
-        m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_pagina)
-        if not m_data: return
+        # PROTEZIONE DATA ERRATA (Cerca solo all'inizio della pagina)
+        testo_inizio = testo_pagina[:1500]
+        m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_inizio)
+        if not m_data: 
+            print(f"      [SKIP] Data non trovata nel referto.", flush=True)
+            return
         data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
 
-        # --- TAVOLINO ---
+        # --- GESTIONE TAVOLINO (Logica Infallibile) ---
         is_tavolino = "tavolino" in testo_pagina.lower() or (tot_casa == 60 and tot_trasf == 0) or (tot_casa == 0 and tot_trasf == 60)
 
         if is_tavolino:
             h1 = soup.find('h1')
             if not h1: return
-            titolo = h1.get_text(strip=True).upper()
-            titolo = re.sub(r'REFERTO\s*PARTITA|REFERTO|PLV\s*HITBALL', '', titolo).strip(" :-")
-            squadre_raw = re.split(r'\s+-\s+|\s+VS\s+', titolo)
-            if len(squadre_raw) < 2: return
             
-            sq_casa = squadre_raw[0].strip(" :-")
-            sq_trasf = squadre_raw[1].strip(" :-")
+            # Pulizia e Split chirurgico
+            titolo = h1.get_text(strip=True).upper()
+            titolo_pulito = re.sub(r'REFERTO\s*PARTITA|REFERTO|PLV\s*HITBALL|:', '', titolo)
+            parti = re.split(r'\s+-\s+|\s+VS\s+', titolo_pulito)
+            parti = [p.strip() for p in parti if p.strip()]
+            
+            if len(parti) < 2: return
+            
+            # Prendiamo SEMPRE gli ultimi due (ignora fuffa iniziale)
+            sq_casa = parti[-2]
+            sq_trasf = parti[-1]
+            
             vincitore = sq_casa if tot_casa > tot_trasf else sq_trasf
             perdente = sq_casa if tot_casa < tot_trasf else sq_trasf
 
@@ -101,22 +113,21 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
                 squadra_g = info_g['squadra'].upper()
                 if not squadra_g: continue
                 
-                # Match esatto senza sporcizia
                 if squadra_g == vincitore: voto = 10
                 elif squadra_g == perdente: voto = -20
                 else: voto = None
                 
                 if voto is not None:
                     id_fb = info_g['id_documento']
-                    # Aggiorna SEMPRE la squadra su Firebase per correggere l'errore precedente
-                    db.collection('giocatori').document(id_fb).set({
-                        'nome_reale': info_g['nome_display'], 
-                        'squadra': info_g['squadra'],
-                        'is_fem': id_fb in QUOTE_ROSA_FEM, 
-                        'punti_giornate': { data_match: voto }
-                    }, merge=True)
-                    counter['effettuate'] += 1
-                    print(f"      [CORREZIONE TAV.] {id_fb} -> {voto}pt", flush=True)
+                    if stato_fb.get(id_fb, {}).get('punti_giornate', {}).get(data_match) != voto:
+                        db.collection('giocatori').document(id_fb).set({
+                            'nome_reale': info_g['nome_display'], 
+                            'squadra': info_g['squadra'],
+                            'is_fem': id_fb in QUOTE_ROSA_FEM, 
+                            'punti_giornate': { data_match: voto }
+                        }, merge=True)
+                        counter['effettuate'] += 1
+                        print(f"      [TAV-UPDATE] {id_fb} | {voto}pt", flush=True)
             return
 
         # --- ANALISI NORMALE ---
@@ -152,7 +163,6 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
                 fatti, subiti = (tot_casa, tot_trasf) if is_casa else (tot_trasf, tot_casa)
                 voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, id_fb in QUOTE_ROSA_FEM, False)
                 
-                # Se il voto è diverso, sovrascriviamo (così correggiamo anche i vecchi errori)
                 if stato_fb.get(id_fb, {}).get('punti_giornate', {}).get(data_match) != voto:
                     db.collection('giocatori').document(id_fb).set({
                         'nome_reale': info_g['nome_display'], 'categoria': info_g['categoria'],
@@ -166,7 +176,11 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
 
         estrai_e_salva(liste_squadre[0], True)
         estrai_e_salva(liste_squadre[1], False)
-    except Exception as e: print(f"      [ERR] {e}", flush=True)
+        
+    except requests.exceptions.RequestException as e:
+        print(f"      [TIMEOUT/CONNESSIONE] Riproverà al prossimo avvio.", flush=True)
+    except Exception as e: 
+        print(f"      [ERR] {e}", flush=True)
 
 def recupera_e_analizza(db, mappa):
     stato_fb = scarica_stato_firebase(db)
@@ -189,7 +203,7 @@ def recupera_e_analizza(db, mappa):
                     m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', testo_riga, re.I)
                     if m_ris:
                         processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), int(m_ris.group(1)), int(m_ris.group(2)), db, mappa, stato_fb, counter)
-        except Exception as e: print(f">>> Errore: {e}", flush=True)
+        except Exception as e: print(f">>> Errore Campionato {camp_id}: {e}", flush=True)
     print(f"\n>>> FINE. Scritture: {counter['effettuate']} | Risparmiate: {counter['risparmiate']}", flush=True)
 
 if __name__ == "__main__":
