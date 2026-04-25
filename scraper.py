@@ -53,11 +53,6 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         print(f"Errore caricamento JSON: {e}", flush=True)
         return {}
 
-def scarica_stato_firebase(db):
-    print("\n>>> Lettura database Firebase...", flush=True)
-    docs = db.collection('giocatori').stream()
-    return {doc.id: doc.to_dict() for doc in docs}
-
 def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, is_fem, tav):
     p_base = (punti_tiri * 2) if is_fem else punti_tiri
     malus_auto = -(autohits * 1)
@@ -69,18 +64,15 @@ def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, 
     malus_disc = (-10 if giallo else 0) + (-20 if rosso else 0) + (-20 if tav else 0)
     return p_base + malus_auto + bonus_att + bonus_def + malus_disc
 
-def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
+def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
     try:
         res = requests.get(url, headers=HEADERS, timeout=10)
         res.raise_for_status()
         soup = BeautifulSoup(res.text, 'html.parser')
         testo_pagina = soup.get_text(separator=' ')
         
-        # Cerca la data in tutta la pagina senza limitazioni di caratteri
         m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_pagina)
-        if not m_data: 
-            print(f"      [SKIP] Data non trovata nel referto.", flush=True)
-            return
+        if not m_data: return
         data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
 
         # --- GESTIONE TAVOLINO ---
@@ -97,34 +89,33 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
             
             if len(parti) < 2: return
             
-            sq_casa = parti[-2]
-            sq_trasf = parti[-1]
-            
+            sq_casa, sq_trasf = parti[-2], parti[-1]
             vincitore = sq_casa if tot_casa > tot_trasf else sq_trasf
             perdente = sq_casa if tot_casa < tot_trasf else sq_trasf
 
-            print(f"      [TAVOLINO] {vincitore} batte {perdente}", flush=True)
+            print(f"      [TAVOLINO] {vincitore} batte {perdente} in data {data_match}", flush=True)
 
             for parole_json, info_g in mappa.items():
                 squadra_g = info_g['squadra'].upper()
                 if not squadra_g: continue
                 
-                # Logica flessibile: controlla se i nomi si contengono a vicenda
-                if squadra_g in vincitore or vincitore in squadra_g: voto = 10
-                elif squadra_g in perdente or perdente in squadra_g: voto = -20
-                else: voto = None
+                voto = None
+                if squadra_g in vincitore or vincitore in squadra_g: 
+                    voto = 10
+                elif squadra_g in perdente or perdente in squadra_g: 
+                    voto = -20
+                else:
+                    parole_sq = [p for p in squadra_g.split() if len(p) > 3]
+                    for p in parole_sq:
+                        if p in vincitore: 
+                            voto = 10; break
+                        elif p in perdente: 
+                            voto = -20; break
                 
                 if voto is not None:
                     id_fb = info_g['id_documento']
-                    if stato_fb.get(id_fb, {}).get('punti_giornate', {}).get(data_match) != voto:
-                        db.collection('giocatori').document(id_fb).set({
-                            'nome_reale': info_g['nome_display'], 
-                            'squadra': info_g['squadra'],
-                            'is_fem': id_fb in QUOTE_ROSA_FEM, 
-                            'punti_giornate': { data_match: voto }
-                        }, merge=True)
-                        counter['effettuate'] += 1
-                        print(f"      [TAV-UPDATE] {id_fb} | {voto}pt", flush=True)
+                    # Salva il voto in memoria RAM (non su Firebase ancora)
+                    memoria_punti[id_fb][data_match] = voto
             return
 
         # --- ANALISI NORMALE ---
@@ -139,10 +130,9 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
                 parole_web = testo_clean.split()
 
                 id_fb = None
-                info_g = None
                 for parole_json, info in mappa.items():
                     if all(p in parole_web for p in parole_json):
-                        id_fb, info_g = info['id_documento'], info
+                        id_fb = info['id_documento']
                         break
                 
                 if not id_fb: continue
@@ -160,16 +150,8 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
                 fatti, subiti = (tot_casa, tot_trasf) if is_casa else (tot_trasf, tot_casa)
                 voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, id_fb in QUOTE_ROSA_FEM, False)
                 
-                if stato_fb.get(id_fb, {}).get('punti_giornate', {}).get(data_match) != voto:
-                    db.collection('giocatori').document(id_fb).set({
-                        'nome_reale': info_g['nome_display'], 'categoria': info_g['categoria'],
-                        'prezzo': info_g['prezzo'], 'squadra': info_g['squadra'],
-                        'is_fem': id_fb in QUOTE_ROSA_FEM, 'punti_giornate': { data_match: voto }
-                    }, merge=True)
-                    print(f"      [UPDATE] {id_fb} | {voto}pt", flush=True)
-                    counter['effettuate'] += 1
-                else:
-                    counter['risparmiate'] += 1
+                # Salva il voto in memoria RAM
+                memoria_punti[id_fb][data_match] = voto
 
         estrai_e_salva(liste_squadre[0], True)
         estrai_e_salva(liste_squadre[1], False)
@@ -180,8 +162,12 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
         print(f"      [ERR] {e}", flush=True)
 
 def recupera_e_analizza(db, mappa):
-    stato_fb = scarica_stato_firebase(db)
-    counter = {'effettuate': 0, 'risparmiate': 0}
+    # 1. Creiamo un "quaderno vuoto" per segnarci tutti i punti
+    memoria_punti = {}
+    for info in mappa.values():
+        memoria_punti[info['id_documento']] = {}
+
+    # 2. Scansioniamo i campionati e riempiamo il quaderno in memoria
     for camp_id in ID_CAMPIONATI:
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
         print(f"\n>>> ANALISI CAMPIONATO {camp_id}", flush=True)
@@ -199,9 +185,35 @@ def recupera_e_analizza(db, mappa):
                             if "Risultato:" in testo_riga: break
                     m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', testo_riga, re.I)
                     if m_ris:
-                        processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), int(m_ris.group(1)), int(m_ris.group(2)), db, mappa, stato_fb, counter)
+                        processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), int(m_ris.group(1)), int(m_ris.group(2)), mappa, memoria_punti)
         except Exception as e: print(f">>> Errore Campionato {camp_id}: {e}", flush=True)
-    print(f"\n>>> FINE. Scritture: {counter['effettuate']} | Risparmiate: {counter['risparmiate']}", flush=True)
+
+    # 3. FASE DI RISCRITTURA TOTALE SU FIREBASE
+    print("\n>>> INIZIO RISCRITTURA DA ZERO SU FIREBASE...", flush=True)
+    giocatori_aggiornati = 0
+
+    for parole_json, info_g in mappa.items():
+        id_fb = info_g['id_documento']
+        voti_finali = memoria_punti[id_fb]
+        
+        doc_ref = db.collection('giocatori').document(id_fb)
+        
+        # 1. Mantiene sani i dati anagrafici
+        doc_ref.set({
+            'nome_reale': info_g['nome_display'],
+            'categoria': info_g['categoria'],
+            'prezzo': info_g['prezzo'],
+            'squadra': info_g['squadra'],
+            'is_fem': id_fb in QUOTE_ROSA_FEM
+        }, merge=True)
+        
+        # 2. LA MAGIA: Cancella i vecchi punti "fantasma" e sovrascrive tutto con quelli calcolati ora!
+        doc_ref.update({
+            'punti_giornate': voti_finali
+        })
+        giocatori_aggiornati += 1
+
+    print(f">>> OPERAZIONE COMPLETATA! Database azzerato e riscritto in modo pulito per {giocatori_aggiornati} giocatori.", flush=True)
 
 if __name__ == "__main__":
     mappa_g = carica_anagrafica_locale("giocatori.json")
