@@ -3,31 +3,31 @@
         "nome_reale": "Pietro Evangelista",
         "categoria": "A1",
         "prezzo": 120,
-        "squadra": ": FLAMURTARI"
+        "squadra": "FLAMURTARI"
     },
     {
         "nome_reale": "Luca Fagherazzi",
         "categoria": "A1",
         "prezzo": 95,
-        "squadra": ": GENOVA HIT BALL"
+        "squadra": "GENOVA HIT BALL"
     },
     {
         "nome_reale": "Federico Pistidda",
         "categoria": "A1",
         "prezzo": 92,
-        "squadra": ": LAB TO HIT"
+        "squadra": "LAB TO HIT"
     },
     {
         "nome_reale": "Andrea Belcastro",
         "categoria": "A1",
         "prezzo": 88,
-        "squadra": ": RED DEVILS"
+        "squadra": "RED DEVILS"
     },
     {
         "nome_reale": "Mirko Violetto",
         "categoria": "A1",
         "prezzo": 86,
-        "squadra": ": SUNKNIGHTS"
+        "squadra": "SUNKNIGHTS"
     },
     {
         "nome_reale": "Simone Selvaggio",
@@ -39,13 +39,13 @@
         "nome_reale": "Federico Garrone",
         "categoria": "A1",
         "prezzo": 80,
-        "squadra": ": RED DEVILS"
+        "squadra": "RED DEVILS"
     },
     {
         "nome_reale": "Luca Cardinali",
         "categoria": "A1",
         "prezzo": 79,
-        "squadra": ": LAB TO HIT"
+        "squadra": "LAB TO HIT"
     },
     {
         "nome_reale": "Amedeo Biglino",
@@ -63,7 +63,7 @@
         "nome_reale": "Matteo Turigliatto",
         "categoria": "A1",
         "prezzo": 74,
-        "squadra": ": FLAMURTARI"
+        "squadra": "FLAMURTARI"
     },
     {
         "nome_reale": "Antonio De Rosa",
@@ -81,7 +81,7 @@
         "nome_reale": "Mattia Rizzon",
         "categoria": "A1",
         "prezzo": 69,
-        "squadra": ": LAB TO HIT"
+        "squadra": "LAB TO HIT"
     },
     {
         "nome_reale": "Riccardo Francabandiera",
@@ -105,7 +105,7 @@
         "nome_reale": "Luca Siciliano",
         "categoria": "A1",
         "prezzo": 63,
-        "squadra": ": GENOVA HIT BALL"
+        "squadra": "GENOVA HIT BALL"
     },
     {
         "nome_reale": "Giuseppe Mirra",
@@ -123,7 +123,7 @@
         "nome_reale": "Dario Ravera",
         "categoria": "A1",
         "prezzo": 60,
-        "squadra": ": GENOVA HIT BALL"
+        "squadra": "GENOVA HIT BALL"
     },
     {
         "nome_reale": "Marco De Salvo",
@@ -135,13 +135,13 @@
         "nome_reale": "Daniel Tiago Guzzafame",
         "categoria": "A1",
         "prezzo": 58,
-        "squadra": ": SUNKNIGHTS"
+        "squadra": "SUNKNIGHTS"
     },
     {
         "nome_reale": "Leonardo Farina",
         "categoria": "A1",
         "prezzo": 57,
-        "squadra": ": GENOVA HIT BALL"
+        "squadra": "GENOVA HIT BALL"
     },
     {
         "nome_reale": "Antonio Mirco Santarsia",
@@ -159,7 +159,7 @@
         "nome_reale": "Alessio Casali",
         "categoria": "A1",
         "prezzo": 54,
-        "squadra": ": SUNKNIGHTS"
+        "squadra": "SUNKNIGHTS"
     },
     {
         "nome_reale": "Andrea Rigoni",
@@ -189,7 +189,7 @@
         "nome_reale": "Gabriel Alessandro Delgrosso",
         "categoria": "A1",
         "prezzo": 49,
-        "squadra": ": RED DEVILS"
+        "squadra": "RED DEVILS"
     },
     {
         "nome_reale": "Luca Ambrosino",
@@ -201,19 +201,19 @@
         "nome_reale": "Maurizio Rattalino",
         "categoria": "A1",
         "prezzo": 47,
-        "squadra": ": SUNKNIGHTS"
+        "squadra": "SUNKNIGHTS"
     },
     {
         "nome_reale": "Mattia Vazzoler",
         "categoria": "A1",
         "prezzo": 46,
-        "squadra": ": RED DEVILS"
+        "squadra": "RED DEVILS"
     },
     {
         "nome_reale": "Federico D'Oria",
         "categoria": "A1",
         "prezzo": 45,
-        "squadra": ": LAB TO HIT"
+        "squadra": "LAB TO HIT"
     },
     {
         "nome_reale": "Gaspare Guarrato",
@@ -225,13 +225,13 @@
         "nome_reale": "Riccardo Damiano",
         "categoria": "A1",
         "prezzo": 43,
-        "squadra": ": FLAMURTARI"
+        "squadra": "FLAMURTARI"
     },
     {
         "nome_reale": "Michele Messina",
         "categoria": "A1",
         "prezzo": 42,
-        "squadra": ": RED DEVILS"
+        "squadra": "RED DEVILS"
     },
     {
         "nome_reale": "Daniele Agnello",
@@ -243,19 +243,19 @@
         "nome_reale": "Davide Ciancio",
         "categoria": "A1",
         "prezzo": 40,
-        "squadra": ": GENOVA HIT BALL"
+        "squadra": "GENOVA HIT BALL"
     },
     {
         "nome_reale": "Stefano Calvo",
         "categoria": "A1",
         "prezzo": 39,
-        "squadra": ": LAB TO HIT"
+        "squadra": "LAB TO HIT"
     },
     {
         "nome_reale": "Stefano Benedetto",
         "categoria": "A1",
         "prezzo": 38,
-        "squadra": ": SUNKNIGHTS"
+        "squadra": "SUNKNIGHTS"
     },
     {
         "nome_reale": "Daniele Botosso",
@@ -273,7 +273,7 @@
         "nome_reale": "Leonardo Cicogna",
         "categoria": "A1",
         "prezzo": 35,
-        "squadra": ": PICCOLO CLUB"
+        "squadra": "PICCOLO CLUB"
     },
     {
         "nome_reale": "Matteo Cipolletta",
@@ -291,7 +291,7 @@
         "nome_reale": "Riccardo Simini",
         "categoria": "A1",
         "prezzo": 32,
-        "squadra": ": RED DEVILS"
+        "squadra": "RED DEVILS"
     },
     {
         "nome_reale": "Andrea Cacioli",
@@ -303,7 +303,7 @@
         "nome_reale": "Davide Salvaggio",
         "categoria": "A1",
         "prezzo": 30,
-        "squadra": ": RED DEVILS"
+        "squadra": "RED DEVILS"
     },
     {
         "nome_reale": "Alessio Petrosino",
@@ -345,7 +345,7 @@
         "nome_reale": "Alessandro Rigardo",
         "categoria": "A1",
         "prezzo": 23,
-        "squadra": ": LAB TO HIT"
+        "squadra": "LAB TO HIT"
     },
     {
         "nome_reale": "Federico Suppo",
@@ -357,13 +357,13 @@
         "nome_reale": "Filippo Venturini",
         "categoria": "A1",
         "prezzo": 21,
-        "squadra": ": LAB TO HIT"
+        "squadra": "LAB TO HIT"
     },
     {
         "nome_reale": "Enrico Salari",
         "categoria": "A1",
         "prezzo": 20,
-        "squadra": ": FLAMURTARI"
+        "squadra": "FLAMURTARI"
     },
     {
         "nome_reale": "Danilo Sacchetto",
@@ -375,7 +375,7 @@
         "nome_reale": "Marco Virgilio",
         "categoria": "A1",
         "prezzo": 18,
-        "squadra": ": SUNKNIGHTS"
+        "squadra": "SUNKNIGHTS"
     },
     {
         "nome_reale": "Daniele Gennaro",
@@ -393,37 +393,37 @@
         "nome_reale": "Alessandro Adami",
         "categoria": "A1",
         "prezzo": 15,
-        "squadra": ": SUNKNIGHTS"
+        "squadra": "SUNKNIGHTS"
     },
     {
         "nome_reale": "Marco Zanatta",
         "categoria": "A1",
         "prezzo": 14,
-        "squadra": ": FLAMURTARI"
+        "squadra": "FLAMURTARI"
     },
     {
         "nome_reale": "Leonardo Chiarella",
         "categoria": "A1",
         "prezzo": 13,
-        "squadra": ": GENOVA HIT BALL"
+        "squadra": "GENOVA HIT BALL"
     },
     {
         "nome_reale": "Giorgio Recalcati",
         "categoria": "A1",
         "prezzo": 12,
-        "squadra": ": GENOVA HIT BALL"
+        "squadra": "GENOVA HIT BALL"
     },
     {
         "nome_reale": "Enrico Spagnolini",
         "categoria": "A1",
         "prezzo": 11,
-        "squadra": ": SUNKNIGHTS"
+        "squadra": "SUNKNIGHTS"
     },
     {
         "nome_reale": "Daniele Managò",
         "categoria": "A1",
         "prezzo": 10,
-        "squadra": ": FLAMURTARI"
+        "squadra": "FLAMURTARI"
     },
     {
         "nome_reale": "Matteo Clara",
@@ -435,13 +435,13 @@
         "nome_reale": "Angelo Zito",
         "categoria": "A1",
         "prezzo": 5,
-        "squadra": ": FLAMURTARI"
+        "squadra": "FLAMURTARI"
     },
     {
         "nome_reale": "Federica Funnone",
         "categoria": "A1",
         "prezzo": 18,
-        "squadra": ": FLAMURTARI"
+        "squadra": "FLAMURTARI"
     },
     {
         "nome_reale": "Martina Lupo",
@@ -459,7 +459,7 @@
         "nome_reale": "Gabriele Barone",
         "categoria": "A2",
         "prezzo": 92,
-        "squadra": ": PELLEGRINI VENARIA"
+        "squadra": "PELLEGRINI VENARIA"
     },
     {
         "nome_reale": "Luigi Ghirardi",
@@ -477,7 +477,7 @@
         "nome_reale": "Alessandro Varetto",
         "categoria": "A2",
         "prezzo": 86,
-        "squadra": ": BLACK KNIGHTS"
+        "squadra": "BLACK KNIGHTS"
     },
     {
         "nome_reale": "Gianluca Martinelli",
@@ -495,7 +495,7 @@
         "nome_reale": "Alberto Casalegno",
         "categoria": "A2",
         "prezzo": 81,
-        "squadra": ": PELLEGRINI VENARIA"
+        "squadra": "PELLEGRINI VENARIA"
     },
     {
         "nome_reale": "Ramon Rutigliano",
@@ -513,31 +513,31 @@
         "nome_reale": "Paul Mihei",
         "categoria": "A2",
         "prezzo": 78,
-        "squadra": ": BIOGHETTYSON"
+        "squadra": "BIOGHETTYSON"
     },
     {
         "nome_reale": "Luca Mocciaro",
         "categoria": "A2",
         "prezzo": 76,
-        "squadra": ": PELLEGRINI VENARIA"
+        "squadra": "PELLEGRINI VENARIA"
     },
     {
         "nome_reale": "Emiliano Travaglini",
         "categoria": "A2",
         "prezzo": 74,
-        "squadra": ": BIOGHETTYSON"
+        "squadra": "BIOGHETTYSON"
     },
     {
         "nome_reale": "Lorenzo De Nicola Civitarese",
         "categoria": "A2",
         "prezzo": 73,
-        "squadra": ": BLACK KNIGHTS"
+        "squadra": "BLACK KNIGHTS"
     },
     {
         "nome_reale": "Marcello Bacchini",
         "categoria": "A2",
         "prezzo": 72,
-        "squadra": ": ALL BLACKS"
+        "squadra": "ALL BLACKS"
     },
     {
         "nome_reale": "Gianluca Zanetti",
@@ -567,13 +567,13 @@
         "nome_reale": "Matteo Vanni",
         "categoria": "A2",
         "prezzo": 66,
-        "squadra": ": BLACK KNIGHTS"
+        "squadra": "BLACK KNIGHTS"
     },
     {
         "nome_reale": "Francesco Caligaris",
         "categoria": "A2",
         "prezzo": 65,
-        "squadra": ": ALL BLACKS"
+        "squadra": "ALL BLACKS"
     },
     {
         "nome_reale": "Simone De Meo",
@@ -585,7 +585,7 @@
         "nome_reale": "Alessandro Bruno",
         "categoria": "A2",
         "prezzo": 63,
-        "squadra": ": BIOGHETTYSON"
+        "squadra": "BIOGHETTYSON"
     },
     {
         "nome_reale": "Tommaso Tomasina",
@@ -603,25 +603,25 @@
         "nome_reale": "Diego Leonardi",
         "categoria": "A2",
         "prezzo": 60,
-        "squadra": ": ALL BLACKS"
+        "squadra": "ALL BLACKS"
     },
     {
         "nome_reale": "Luca Dragna",
         "categoria": "A2",
         "prezzo": 59,
-        "squadra": ": PELLEGRINI VENARIA"
+        "squadra": "PELLEGRINI VENARIA"
     },
     {
         "nome_reale": "Federico Perno",
         "categoria": "A2",
         "prezzo": 58,
-        "squadra": ": ALL BLACKS"
+        "squadra": "ALL BLACKS"
     },
     {
         "nome_reale": "Fabio Bragagnolo",
         "categoria": "A2",
         "prezzo": 57,
-        "squadra": ": BLACK KNIGHTS"
+        "squadra": "BLACK KNIGHTS"
     },
     {
         "nome_reale": "Andrea Vecchiattini",
@@ -663,7 +663,7 @@
         "nome_reale": "Domenico Pirozzolo",
         "categoria": "A2",
         "prezzo": 50,
-        "squadra": ": PELLEGRINI VENARIA"
+        "squadra": "PELLEGRINI VENARIA"
     },
     {
         "nome_reale": "Andrea Giustetti",
@@ -699,7 +699,7 @@
         "nome_reale": "Marco Potenza",
         "categoria": "A2",
         "prezzo": 44,
-        "squadra": ": ALL BLACKS"
+        "squadra": "ALL BLACKS"
     },
     {
         "nome_reale": "Davide Centin",
@@ -717,7 +717,7 @@
         "nome_reale": "Patrick Marzano",
         "categoria": "A2",
         "prezzo": 41,
-        "squadra": ": ALL BLACKS"
+        "squadra": "ALL BLACKS"
     },
     {
         "nome_reale": "Ivan Russo",
@@ -741,7 +741,7 @@
         "nome_reale": "Gianluca Varetto",
         "categoria": "A2",
         "prezzo": 37,
-        "squadra": ": BLACK KNIGHTS"
+        "squadra": "BLACK KNIGHTS"
     },
     {
         "nome_reale": "Gianluca Mondo",
@@ -753,13 +753,13 @@
         "nome_reale": "Marco Antinoro",
         "categoria": "A2",
         "prezzo": 35,
-        "squadra": ": BLACK KNIGHTS"
+        "squadra": "BLACK KNIGHTS"
     },
     {
         "nome_reale": "Fabrizio Gennaro",
         "categoria": "A2",
         "prezzo": 34,
-        "squadra": ": ALL BLACKS"
+        "squadra": "ALL BLACKS"
     },
     {
         "nome_reale": "Simone Basano",
@@ -771,13 +771,13 @@
         "nome_reale": "Andrea Tapella",
         "categoria": "A2",
         "prezzo": 32,
-        "squadra": ": BIOGHETTYSON"
+        "squadra": "BIOGHETTYSON"
     },
     {
         "nome_reale": "Marco Barrasso",
         "categoria": "A2",
         "prezzo": 31,
-        "squadra": ": BIOGHETTYSON"
+        "squadra": "BIOGHETTYSON"
     },
     {
         "nome_reale": "Stefano Truzzi",
@@ -795,7 +795,7 @@
         "nome_reale": "Massimo Sbano",
         "categoria": "A2",
         "prezzo": 28,
-        "squadra": ": HAMMERS"
+        "squadra": "HAMMERS"
     },
     {
         "nome_reale": "Davide Rivetti",
@@ -807,7 +807,7 @@
         "nome_reale": "Tommaso Baudi Di Vesme Gabutti",
         "categoria": "A2",
         "prezzo": 26,
-        "squadra": ": BIOGHETTYSON"
+        "squadra": "BIOGHETTYSON"
     },
     {
         "nome_reale": "Samuel Maselli",
@@ -819,13 +819,13 @@
         "nome_reale": "Matteo Folladori",
         "categoria": "A2",
         "prezzo": 24,
-        "squadra": ": SKUNK MILANO"
+        "squadra": "SKUNK MILANO"
     },
     {
         "nome_reale": "Gianluca Zingarelli",
         "categoria": "A2",
         "prezzo": 23,
-        "squadra": ": ALL BLACKS"
+        "squadra": "ALL BLACKS"
     },
     {
         "nome_reale": "Francesco Croci",
@@ -843,19 +843,19 @@
         "nome_reale": "Lorenzo Zezza",
         "categoria": "A2",
         "prezzo": 20,
-        "squadra": ": PELLEGRINI VENARIA"
+        "squadra": "PELLEGRINI VENARIA"
     },
     {
         "nome_reale": "Francesco Mongiovì",
         "categoria": "A2",
         "prezzo": 19,
-        "squadra": ": BIOGHETTYSON"
+        "squadra": "BIOGHETTYSON"
     },
     {
         "nome_reale": "Massimiliano Casigli",
         "categoria": "A2",
         "prezzo": 18,
-        "squadra": ": BLACK KNIGHTS"
+        "squadra": "BLACK KNIGHTS"
     },
     {
         "nome_reale": "Lorenzo Novara",
@@ -867,19 +867,19 @@
         "nome_reale": "Andrea Garzena",
         "categoria": "A2",
         "prezzo": 16,
-        "squadra": ": HOCHETI POKETY"
+        "squadra": "HOCHETI POKETY"
     },
     {
         "nome_reale": "Francesco Rigoni",
         "categoria": "A2",
         "prezzo": 15,
-        "squadra": ": BIOGHETTYSON"
+        "squadra": "BIOGHETTYSON"
     },
     {
         "nome_reale": "Nicol Sciretta",
         "categoria": "A2",
         "prezzo": 14,
-        "squadra": ": PELLEGRINI VENARIA"
+        "squadra": "PELLEGRINI VENARIA"
     },
     {
         "nome_reale": "Daniele Demarchi",
@@ -891,7 +891,7 @@
         "nome_reale": "Simone Garino",
         "categoria": "A2",
         "prezzo": 12,
-        "squadra": ": BIOGHETTYSON"
+        "squadra": "BIOGHETTYSON"
     },
     {
         "nome_reale": "Andrea Poso",
@@ -903,7 +903,7 @@
         "nome_reale": "Michelangelo Lupo Benini",
         "categoria": "A2",
         "prezzo": 8,
-        "squadra": ": SKUNK MILANO"
+        "squadra": "SKUNK MILANO"
     },
     {
         "nome_reale": "Federico Sisci",
@@ -933,25 +933,25 @@
         "nome_reale": "Giuseppe Armanno",
         "categoria": "B1",
         "prezzo": 80,
-        "squadra": ": DECEPTICON"
+        "squadra": "DECEPTICON"
     },
     {
         "nome_reale": "Nicolò Bonincontro",
         "categoria": "B1",
         "prezzo": 78,
-        "squadra": ": HIT BULLS"
+        "squadra": "HIT BULLS"
     },
     {
         "nome_reale": "Rosso Paolo",
         "categoria": "B1",
         "prezzo": 76,
-        "squadra": ": GUARDIANS CHIVASSO"
+        "squadra": "GUARDIANS CHIVASSO"
     },
     {
         "nome_reale": "Manuel Spatafora",
         "categoria": "B1",
         "prezzo": 75,
-        "squadra": ": GUARDIANS CHIVASSO"
+        "squadra": "GUARDIANS CHIVASSO"
     },
     {
         "nome_reale": "Stefano Santangelo",
@@ -969,7 +969,7 @@
         "nome_reale": "Pier Paolo Specchiulli",
         "categoria": "B1",
         "prezzo": 72,
-        "squadra": ": HIT BULLS"
+        "squadra": "HIT BULLS"
     },
     {
         "nome_reale": "Mauro Pompili",
@@ -993,13 +993,13 @@
         "nome_reale": "Marco Schiaroli",
         "categoria": "B1",
         "prezzo": 68,
-        "squadra": ": DRACARYS CHIVASSO"
+        "squadra": "DRACARYS CHIVASSO"
     },
     {
         "nome_reale": "Angelo D'Alessandra",
         "categoria": "B1",
         "prezzo": 67,
-        "squadra": ": GUARDIANS CHIVASSO"
+        "squadra": "GUARDIANS CHIVASSO"
     },
     {
         "nome_reale": "Paolo Guerra",
@@ -1011,13 +1011,13 @@
         "nome_reale": "Francesco Dughera",
         "categoria": "B1",
         "prezzo": 65,
-        "squadra": ": DRACARYS CHIVASSO"
+        "squadra": "DRACARYS CHIVASSO"
     },
     {
         "nome_reale": "Simone Abbona",
         "categoria": "B1",
         "prezzo": 64,
-        "squadra": ": DRIPHIT"
+        "squadra": "DRIPHIT"
     },
     {
         "nome_reale": "John Gonzalo Robles Zavaleta",
@@ -1035,7 +1035,7 @@
         "nome_reale": "Adriano Paribello Grasso",
         "categoria": "B1",
         "prezzo": 61,
-        "squadra": ": DRACARYS CHIVASSO"
+        "squadra": "DRACARYS CHIVASSO"
     },
     {
         "nome_reale": "Alex Serratore",
@@ -1053,7 +1053,7 @@
         "nome_reale": "Andrea Brossa",
         "categoria": "B1",
         "prezzo": 58,
-        "squadra": ": DRIPHIT"
+        "squadra": "DRIPHIT"
     },
     {
         "nome_reale": "Franco Giambanco",
@@ -1083,13 +1083,13 @@
         "nome_reale": "Ivano Reato",
         "categoria": "B1",
         "prezzo": 53,
-        "squadra": ": GUARDIANS CHIVASSO"
+        "squadra": "GUARDIANS CHIVASSO"
     },
     {
         "nome_reale": "Davide Martini",
         "categoria": "B1",
         "prezzo": 52,
-        "squadra": ": DRACARYS CHIVASSO"
+        "squadra": "DRACARYS CHIVASSO"
     },
     {
         "nome_reale": "Jacopo Sanfilippo",
@@ -1101,7 +1101,7 @@
         "nome_reale": "Flavio Caiano",
         "categoria": "B1",
         "prezzo": 50,
-        "squadra": ": DRIPHIT"
+        "squadra": "DRIPHIT"
     },
     {
         "nome_reale": "Andrea De Blasio",
@@ -1113,25 +1113,25 @@
         "nome_reale": "Federico Gennaro",
         "categoria": "B1",
         "prezzo": 48,
-        "squadra": ": GUARDIANS CHIVASSO"
+        "squadra": "GUARDIANS CHIVASSO"
     },
     {
         "nome_reale": "Riccardo Toppan",
         "categoria": "B1",
         "prezzo": 47,
-        "squadra": ": DECEPTICON"
+        "squadra": "DECEPTICON"
     },
     {
         "nome_reale": "Marcello Saporito",
         "categoria": "B1",
         "prezzo": 46,
-        "squadra": ": GUARDIANS CHIVASSO"
+        "squadra": "GUARDIANS CHIVASSO"
     },
     {
         "nome_reale": "Federico Tibaldi",
         "categoria": "B1",
         "prezzo": 45,
-        "squadra": ": HIT BULLS"
+        "squadra": "HIT BULLS"
     },
     {
         "nome_reale": "Federico Solinas",
@@ -1149,7 +1149,7 @@
         "nome_reale": "Alessandro Rolino",
         "categoria": "B1",
         "prezzo": 42,
-        "squadra": ": NOMADI VENARIA"
+        "squadra": "NOMADI VENARIA"
     },
     {
         "nome_reale": "Antonio Marincola",
@@ -1167,13 +1167,13 @@
         "nome_reale": "Alessandro Santomaggio",
         "categoria": "B1",
         "prezzo": 39,
-        "squadra": ": DECEPTICON"
+        "squadra": "DECEPTICON"
     },
     {
         "nome_reale": "Simone Guglielmetto",
         "categoria": "B1",
         "prezzo": 38,
-        "squadra": ": DECEPTICON"
+        "squadra": "DECEPTICON"
     },
     {
         "nome_reale": "Justin Ossai",
@@ -1185,13 +1185,13 @@
         "nome_reale": "Luca Cavaglià",
         "categoria": "B1",
         "prezzo": 36,
-        "squadra": ": DECEPTICON"
+        "squadra": "DECEPTICON"
     },
     {
         "nome_reale": "Nicolò Negrini",
         "categoria": "B1",
         "prezzo": 35,
-        "squadra": ": HIT BULLS"
+        "squadra": "HIT BULLS"
     },
     {
         "nome_reale": "Alberto Gabriolo",
@@ -1203,7 +1203,7 @@
         "nome_reale": "Kevin Calvo",
         "categoria": "B1",
         "prezzo": 33,
-        "squadra": ": HIT BULLS"
+        "squadra": "HIT BULLS"
     },
     {
         "nome_reale": "Simone Marcarino",
@@ -1221,19 +1221,19 @@
         "nome_reale": "Mattia Bucci",
         "categoria": "B1",
         "prezzo": 30,
-        "squadra": ": NOMADI VENARIA"
+        "squadra": "NOMADI VENARIA"
     },
     {
         "nome_reale": "Simone Mazza",
         "categoria": "B1",
         "prezzo": 29,
-        "squadra": ": DRIPHIT"
+        "squadra": "DRIPHIT"
     },
     {
         "nome_reale": "Christian Alescio",
         "categoria": "B1",
         "prezzo": 28,
-        "squadra": ": NOMADI VENARIA"
+        "squadra": "NOMADI VENARIA"
     },
     {
         "nome_reale": "Marco Rizzo",
@@ -1245,7 +1245,7 @@
         "nome_reale": "Matteo Roma",
         "categoria": "B1",
         "prezzo": 26,
-        "squadra": ": DRACARYS CHIVASSO"
+        "squadra": "DRACARYS CHIVASSO"
     },
     {
         "nome_reale": "Mauro Mola",
@@ -1269,13 +1269,13 @@
         "nome_reale": "Emanuele Filiberto Pellegrin",
         "categoria": "B1",
         "prezzo": 22,
-        "squadra": ": DRACARYS CHIVASSO"
+        "squadra": "DRACARYS CHIVASSO"
     },
     {
         "nome_reale": "Daniele Barbato",
         "categoria": "B1",
         "prezzo": 21,
-        "squadra": ": DECEPTICON"
+        "squadra": "DECEPTICON"
     },
     {
         "nome_reale": "Carlo Del Console",
@@ -1287,7 +1287,7 @@
         "nome_reale": "Mattia Maggio",
         "categoria": "B1",
         "prezzo": 19,
-        "squadra": ": DRIPHIT"
+        "squadra": "DRIPHIT"
     },
     {
         "nome_reale": "Fabrizio Alberto",
@@ -1305,7 +1305,7 @@
         "nome_reale": "Dante Accarini",
         "categoria": "B1",
         "prezzo": 16,
-        "squadra": ": DRIPHIT"
+        "squadra": "DRIPHIT"
     },
     {
         "nome_reale": "Stefano Bollito",
@@ -1317,13 +1317,13 @@
         "nome_reale": "Alessandro Maggio",
         "categoria": "B1",
         "prezzo": 14,
-        "squadra": ": DRIPHIT"
+        "squadra": "DRIPHIT"
     },
     {
         "nome_reale": "Antonio D'Elicio",
         "categoria": "B1",
         "prezzo": 13,
-        "squadra": ": TORINO WARRIORS"
+        "squadra": "TORINO WARRIORS"
     },
     {
         "nome_reale": "Stefano Lavino",
@@ -1335,7 +1335,7 @@
         "nome_reale": "Valerio Ianniello",
         "categoria": "B1",
         "prezzo": 11,
-        "squadra": ": HIT BULLS"
+        "squadra": "HIT BULLS"
     },
     {
         "nome_reale": "Marco Lorandi",
@@ -1377,7 +1377,7 @@
         "nome_reale": "Sara Sottolano",
         "categoria": "B1",
         "prezzo": 12,
-        "squadra": ": MEATBALLS"
+        "squadra": "MEATBALLS"
     },
     {
         "nome_reale": "Martina Bracesco",
@@ -1407,13 +1407,13 @@
         "nome_reale": "Paolo Lamberti",
         "categoria": "B2",
         "prezzo": 57,
-        "squadra": ": DELIRIUM CONSULUM"
+        "squadra": "DELIRIUM CONSULUM"
     },
     {
         "nome_reale": "Nicolò Signorini",
         "categoria": "B2",
         "prezzo": 56,
-        "squadra": ": KRAKENS CHIVASSO"
+        "squadra": "KRAKENS CHIVASSO"
     },
     {
         "nome_reale": "Andrea Merlo",
@@ -1431,31 +1431,31 @@
         "nome_reale": "Gioele Rossi",
         "categoria": "B2",
         "prezzo": 53,
-        "squadra": ": SPARTAK"
+        "squadra": "SPARTAK"
     },
     {
         "nome_reale": "Dino Pagano",
         "categoria": "B2",
         "prezzo": 52,
-        "squadra": ": DELIRIUM CONSULUM"
+        "squadra": "DELIRIUM CONSULUM"
     },
     {
         "nome_reale": "Renato Dalle Mura",
         "categoria": "B2",
         "prezzo": 51,
-        "squadra": ": DELIRIUM CONSULUM"
+        "squadra": "DELIRIUM CONSULUM"
     },
     {
         "nome_reale": "Gioele Alesina",
         "categoria": "B2",
         "prezzo": 50,
-        "squadra": ": KRAKENS CHIVASSO"
+        "squadra": "KRAKENS CHIVASSO"
     },
     {
         "nome_reale": "Simone Gasbarroni",
         "categoria": "B2",
         "prezzo": 49,
-        "squadra": ": HITBUSTERS"
+        "squadra": "HITBUSTERS"
     },
     {
         "nome_reale": "Daniele Ponte",
@@ -1467,7 +1467,7 @@
         "nome_reale": "Lorenzo Bellino",
         "categoria": "B2",
         "prezzo": 47,
-        "squadra": ": SPARTAK"
+        "squadra": "SPARTAK"
     },
     {
         "nome_reale": "Gianluca Sabatino",
@@ -1479,19 +1479,19 @@
         "nome_reale": "Stefano Incorvaia",
         "categoria": "B2",
         "prezzo": 45,
-        "squadra": ": ATLETICO BOOMERS"
+        "squadra": "ATLETICO BOOMERS"
     },
     {
         "nome_reale": "Luca Maria Mercurio",
         "categoria": "B2",
         "prezzo": 44,
-        "squadra": ": HITBUSTERS"
+        "squadra": "HITBUSTERS"
     },
     {
         "nome_reale": "Daniele Tessarin",
         "categoria": "B2",
         "prezzo": 43,
-        "squadra": ": HITBUSTERS"
+        "squadra": "HITBUSTERS"
     },
     {
         "nome_reale": "Stefano Mazzilli",
@@ -1503,13 +1503,13 @@
         "nome_reale": "Giacomo Guarrato",
         "categoria": "B2",
         "prezzo": 41,
-        "squadra": ": ATLETICO BOOMERS"
+        "squadra": "ATLETICO BOOMERS"
     },
     {
         "nome_reale": "Samuele Carnelli",
         "categoria": "B2",
         "prezzo": 40,
-        "squadra": ": JEDI KNIGHTS"
+        "squadra": "JEDI KNIGHTS"
     },
     {
         "nome_reale": "Francesco Cissello",
@@ -1521,25 +1521,25 @@
         "nome_reale": "Roberto Pirrotta",
         "categoria": "B2",
         "prezzo": 38,
-        "squadra": ": ATLETICO BOOMERS"
+        "squadra": "ATLETICO BOOMERS"
     },
     {
         "nome_reale": "Alessandro Caivano",
         "categoria": "B2",
         "prezzo": 37,
-        "squadra": ": HITBUSTERS"
+        "squadra": "HITBUSTERS"
     },
     {
         "nome_reale": "Mattia Valetti",
         "categoria": "B2",
         "prezzo": 36,
-        "squadra": ": JEDI KNIGHTS"
+        "squadra": "JEDI KNIGHTS"
     },
     {
         "nome_reale": "Andrea Vitale",
         "categoria": "B2",
         "prezzo": 35,
-        "squadra": ": HITBUSTERS"
+        "squadra": "HITBUSTERS"
     },
     {
         "nome_reale": "Andrea Brocchetta",
@@ -1557,13 +1557,13 @@
         "nome_reale": "Franco Augustin Signori",
         "categoria": "B2",
         "prezzo": 32,
-        "squadra": ": KRAKENS CHIVASSO"
+        "squadra": "KRAKENS CHIVASSO"
     },
     {
         "nome_reale": "Davide Costantin Grigoras",
         "categoria": "B2",
         "prezzo": 31,
-        "squadra": ": SPARTAK"
+        "squadra": "SPARTAK"
     },
     {
         "nome_reale": "Andrea Crovagna",
@@ -1581,7 +1581,7 @@
         "nome_reale": "Tommaso Giuliani",
         "categoria": "B2",
         "prezzo": 28,
-        "squadra": ": JEDI KNIGHTS"
+        "squadra": "JEDI KNIGHTS"
     },
     {
         "nome_reale": "Giovanni Aquila",
@@ -1593,13 +1593,13 @@
         "nome_reale": "Gaetano De Vaire",
         "categoria": "B2",
         "prezzo": 26,
-        "squadra": ": JEDI KNIGHTS"
+        "squadra": "JEDI KNIGHTS"
     },
     {
         "nome_reale": "Thomas Gandolfi",
         "categoria": "B2",
         "prezzo": 25,
-        "squadra": ": JEDI KNIGHTS"
+        "squadra": "JEDI KNIGHTS"
     },
     {
         "nome_reale": "Lorenzo Marchitelli",
@@ -1611,13 +1611,13 @@
         "nome_reale": "Lorenzo Lamberti",
         "categoria": "B2",
         "prezzo": 23,
-        "squadra": ": ATLETICO BOOMERS"
+        "squadra": "ATLETICO BOOMERS"
     },
     {
         "nome_reale": "Federico D'Urzo",
         "categoria": "B2",
         "prezzo": 22,
-        "squadra": ": ATLETICO BOOMERS"
+        "squadra": "ATLETICO BOOMERS"
     },
     {
         "nome_reale": "Marco Bassetti",
@@ -1635,31 +1635,31 @@
         "nome_reale": "Mattia Allemano",
         "categoria": "B2",
         "prezzo": 20,
-        "squadra": ": JEDI KNIGHTS"
+        "squadra": "JEDI KNIGHTS"
     },
     {
         "nome_reale": "Vincenzo De Felice",
         "categoria": "B2",
         "prezzo": 19,
-        "squadra": ": ATLETICO BOOMERS"
+        "squadra": "ATLETICO BOOMERS"
     },
     {
         "nome_reale": "Francesco Ghio",
         "categoria": "B2",
         "prezzo": 19,
-        "squadra": ": KRAKENS CHIVASSO"
+        "squadra": "KRAKENS CHIVASSO"
     },
     {
         "nome_reale": "Mattia Calvio",
         "categoria": "B2",
         "prezzo": 18,
-        "squadra": ": KRAKENS CHIVASSO"
+        "squadra": "KRAKENS CHIVASSO"
     },
     {
         "nome_reale": "Manuel De Rosa",
         "categoria": "B2",
         "prezzo": 18,
-        "squadra": ": SPARTAK"
+        "squadra": "SPARTAK"
     },
     {
         "nome_reale": "Riccardo Ajassa",
@@ -1671,7 +1671,7 @@
         "nome_reale": "Gianluca Minuto",
         "categoria": "B2",
         "prezzo": 17,
-        "squadra": ": DELIRIUM CONSULUM"
+        "squadra": "DELIRIUM CONSULUM"
     },
     {
         "nome_reale": "Pietro Chevallard",
@@ -1683,7 +1683,7 @@
         "nome_reale": "Riccardo Daniele",
         "categoria": "B2",
         "prezzo": 16,
-        "squadra": ": SPARTAK"
+        "squadra": "SPARTAK"
     },
     {
         "nome_reale": "Daniele Cecconata",
@@ -1701,19 +1701,19 @@
         "nome_reale": "Francesco Signorini",
         "categoria": "B2",
         "prezzo": 14,
-        "squadra": ": KRAKENS CHIVASSO"
+        "squadra": "KRAKENS CHIVASSO"
     },
     {
         "nome_reale": "Davide Garibaldi",
         "categoria": "B2",
         "prezzo": 14,
-        "squadra": ": JEDI KNIGHTS"
+        "squadra": "JEDI KNIGHTS"
     },
     {
         "nome_reale": "Fabio Pascoli",
         "categoria": "B2",
         "prezzo": 13,
-        "squadra": ": SPARTAK"
+        "squadra": "SPARTAK"
     },
     {
         "nome_reale": "Pierluigi Marchisio",
@@ -1725,7 +1725,7 @@
         "nome_reale": "Tommaso Nardelli",
         "categoria": "B2",
         "prezzo": 12,
-        "squadra": ": SPARTAK"
+        "squadra": "SPARTAK"
     },
     {
         "nome_reale": "Luca Rivetti",
@@ -1749,19 +1749,19 @@
         "nome_reale": "Fabio Zorzan",
         "categoria": "B2",
         "prezzo": 10,
-        "squadra": ": HOMELESS"
+        "squadra": "HOMELESS"
     },
     {
         "nome_reale": "Antonio Angelo Mele",
         "categoria": "B2",
         "prezzo": 10,
-        "squadra": ": JEDI KNIGHTS"
+        "squadra": "JEDI KNIGHTS"
     },
     {
         "nome_reale": "Marco Bruno",
         "categoria": "B2",
         "prezzo": 9,
-        "squadra": ": ATLETICO BOOMERS"
+        "squadra": "ATLETICO BOOMERS"
     },
     {
         "nome_reale": "Alessio Noto",
@@ -1791,7 +1791,7 @@
         "nome_reale": "Carlotta Amodeo",
         "categoria": "B2",
         "prezzo": 40,
-        "squadra": ": HITBUSTERS"
+        "squadra": "HITBUSTERS"
     },
     {
         "nome_reale": "Federica Amorelli",
@@ -1815,13 +1815,13 @@
         "nome_reale": "Alice La Versa",
         "categoria": "B2",
         "prezzo": 10,
-        "squadra": ": DELIRIUM CONSULUM"
+        "squadra": "DELIRIUM CONSULUM"
     },
     {
         "nome_reale": "Noemi Castelluccio",
         "categoria": "B2",
         "prezzo": 9,
-        "squadra": ": HITBUSTERS"
+        "squadra": "HITBUSTERS"
     },
     {
         "nome_reale": "Chiara Gilardi",
