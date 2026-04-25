@@ -3,7 +3,6 @@ import sys
 import json
 import requests
 import re
-import unicodedata
 from bs4 import BeautifulSoup
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -33,9 +32,6 @@ def inizializza_firebase():
         firebase_admin.initialize_app(cred)
     return firestore.client()
 
-def rimuovi_accenti(testo):
-    return unicodedata.normalize('NFKD', testo).encode('ASCII', 'ignore').decode('utf-8')
-
 def carica_anagrafica_locale(percorso_file="giocatori.json"):
     try:
         with open(percorso_file, 'r', encoding='utf-8') as f:
@@ -43,8 +39,9 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         mappa = {}
         for g in dati:
             nome_originale = g['nome_reale'].upper()
-            nome_senza_accenti = rimuovi_accenti(nome_originale)
-            nome_clean = re.sub(r'[^A-Z\s]', ' ', nome_senza_accenti).strip()
+            
+            # FIX: Accettiamo A-Z, accenti, spazi E APOSTROFI (\')
+            nome_clean = re.sub(r'[^A-ZÀÈÉÌÒÙÁÍÓÚ\'\s]', ' ', nome_originale).strip()
             parole = frozenset(nome_clean.split())
             
             mappa[parole] = {
@@ -92,14 +89,18 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
             for li in ul_node.find_all('li', class_=re.compile(r'list-group-item', re.I)):
                 testo_originale = li.get_text(separator=' ', strip=True)
                 
-                testo_senza_accenti = rimuovi_accenti(testo_originale.upper())
-                testo_clean = re.sub(r'[^A-Z\s]', ' ', testo_senza_accenti)
+                # FIX: Uniformiamo tutti i tipi di apostrofo strani del sito web in quello standard
+                testo_upper = testo_originale.upper().replace('’', "'").replace('‘', "'").replace('`', "'")
+                
+                # FIX: Stessa logica con A-Z, accenti, spazi e apostrofi
+                testo_clean = re.sub(r'[^A-ZÀÈÉÌÒÙÁÍÓÚ\'\s]', ' ', testo_upper)
                 parole_nella_riga = testo_clean.split()
 
                 id_fb = None
                 info_g = None
 
                 for parole_json, info in mappa.items():
+                    # Ora "D'URZO" cercherà esattamente la parola intera "D'URZO" nel testo web
                     if all(p in parole_nella_riga for p in parole_json):
                         id_fb = info['id_documento']
                         info_g = info
