@@ -80,19 +80,38 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_firebase, counte
 
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         if len(liste_squadre) < 2: return
-
-        def estrai_e_salva(ul_node, is_casa):
+def estrai_e_salva(ul_node, is_casa):
             for li in ul_node.find_all('li', class_=re.compile(r'list-group-item', re.I)):
                 testo = li.get_text(separator=' ', strip=True)
-                if "x" not in testo: continue
-                n_raw = re.split(r'\d+\s*x|Tot\.', testo, flags=re.I)[0].strip().upper()
-                n_clean = re.sub(r'[^A-Z\s\']', '', n_raw).strip()
                 
-                if n_clean not in mappa: continue
+                # --- NUOVA ESTRAZIONE NOME (MOLTO PIÙ FORTE) ---
+                # Rimuoviamo pattern dei punti (1x2, 0x3, ecc.), Totale e numeri isolati
+                temp = re.sub(r'\d+\s*x\s*\d+|Tot\.\s*\d+|AUTOHIT|\d+', '', testo, flags=re.I).strip()
+                
+                # Puliamo il nome (solo lettere e spazi)
+                n_clean = re.sub(r'[^A-Z\s\']', '', temp.upper()).strip()
+                
+                # Se il nome pulito non è in mappa, proviamo l'inversione (Cognome Nome -> Nome Cognome)
+                if n_clean not in mappa and n_clean:
+                    parti = n_clean.split()
+                    if len(parti) >= 2:
+                        invertito = f"{parti[-1]} {' '.join(parti[:-1])}"
+                        if invertito in mappa:
+                            n_clean = invertito
+
+                if n_clean not in mappa:
+                    # Stampa un avviso così vedi subito cosa non va nel terminale
+                    print(f"      [SKIP] Nome non trovato in JSON: '{n_clean}' (Testo originale: {testo})")
+                    continue
                 
                 info_g = mappa[n_clean]
                 
+                # Calcolo punti (breakdown o Totale se il breakdown è 0)
                 punti_tiri = sum(int(q) * int(v) for q, v in re.findall(r'(\d+)\s*x\s*(2|3)', testo))
+                if punti_tiri == 0:
+                    m_tot = re.search(r'Tot\.\s*(\d+)', testo, re.I)
+                    if m_tot: punti_tiri = int(m_tot.group(1))
+
                 m_auto = re.search(r'(\d+)\s*x\s*AUTOHIT', testo, re.I)
                 autohits = int(m_auto.group(1)) if m_auto else 0
                 giallo = li.find(class_=re.compile(r'warning|yellow', re.I)) is not None
@@ -105,48 +124,15 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_firebase, counte
                 
                 voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, n_clean in QUOTE_ROSA_FEM, tav_match)
                 
-                # --- 2. IL CONTROLLO MAGICO (DIFFING) ---
-                giocatore_fb = stato_firebase.get(n_clean, {})
-                punti_fb = giocatore_fb.get('punti_giornate', {})
+                # Scrittura su Firebase
+                db.collection('giocatori').document(n_clean).set({
+                    'nome_reale': info_g['nome_originale'],
+                    'categoria': info_g['categoria'],
+                    'prezzo': info_g['prezzo'],
+                    'punti_giornate': { chiave_salvataggio: voto }
+                }, merge=True)
                 
-                # Controlliamo se qualcosa è cambiato rispetto a Firebase
-                gia_presente = punti_fb.get(chiave_salvataggio) == voto
-                stessa_cat = giocatore_fb.get('categoria') == info_g['categoria']
-                stesso_prezzo = giocatore_fb.get('prezzo') == info_g['prezzo']
-
-                # Se i dati combaciano perfettamente, non scriviamo nulla!
-                if gia_presente and stessa_cat and stesso_prezzo:
-                    counter['risparmiate'] += 1
-                    print(f"      [SKIP] {n_clean} | Voto già presente, scrittura risparmiata.")
-                else:
-                    # I dati sono nuovi o aggiornati: Prepariamo la scrittura
-                    ref = db.collection('giocatori').document(n_clean)
-                    counter['batch'].set(ref, {
-                        'nome_reale': info_g['nome_originale'],
-                        'categoria': info_g['categoria'],
-                        'prezzo': info_g['prezzo'],
-                        'punti_giornate': { chiave_salvataggio: voto }
-                    }, merge=True)
-                    
-                    counter['effettuate'] += 1
-                    print(f"      [UPDATE] {n_clean} | {chiave_salvataggio} | {voto}pt")
-
-                    # Aggiorniamo la memoria locale così se incontra di nuovo lo stesso giocatore non lo riscrive
-                    if n_clean not in stato_firebase:
-                        stato_firebase[n_clean] = {'punti_giornate': {}}
-                    stato_firebase[n_clean]['punti_giornate'][chiave_salvataggio] = voto
-                    stato_firebase[n_clean]['categoria'] = info_g['categoria']
-                    stato_firebase[n_clean]['prezzo'] = info_g['prezzo']
-
-                    # Firebase accetta massimo 500 scritture per batch. A 400 inviamo il pacco e ne apriamo uno nuovo.
-                    if counter['effettuate'] % 400 == 0:
-                        counter['batch'].commit()
-                        counter['batch'] = db.batch()
-                        print("      >>> Inviato blocco intermedio a Firebase...")
-
-        estrai_e_salva(liste_squadre[0], True)
-        estrai_e_salva(liste_squadre[1], False)
-    except Exception as e: print(f"      [ERR] {e}")
+                print(f"      [OK] {n_clean} | {voto}pt")
 
 def recupera_e_analizza(db, mappa):
     # Inizializziamo lo stato e i contatori
