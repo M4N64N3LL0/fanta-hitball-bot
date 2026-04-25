@@ -71,26 +71,25 @@ def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, 
 
 def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
     try:
-        # PROTEZIONE DA CRASH SITO LENTO
         res = requests.get(url, headers=HEADERS, timeout=10)
         res.raise_for_status()
         soup = BeautifulSoup(res.text, 'html.parser')
         testo_pagina = soup.get_text(separator=' ')
         
+        # Cerca la data in tutta la pagina senza limitazioni di caratteri
         m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_pagina)
         if not m_data: 
             print(f"      [SKIP] Data non trovata nel referto.", flush=True)
             return
         data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
 
-        # --- GESTIONE TAVOLINO (Logica Infallibile) ---
+        # --- GESTIONE TAVOLINO ---
         is_tavolino = "tavolino" in testo_pagina.lower() or (tot_casa == 60 and tot_trasf == 0) or (tot_casa == 0 and tot_trasf == 60)
 
         if is_tavolino:
             h1 = soup.find('h1')
             if not h1: return
             
-            # Pulizia e Split chirurgico
             titolo = h1.get_text(strip=True).upper()
             titolo_pulito = re.sub(r'REFERTO\s*PARTITA|REFERTO|PLV\s*HITBALL|:', '', titolo)
             parti = re.split(r'\s+-\s+|\s+VS\s+', titolo_pulito)
@@ -98,7 +97,6 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
             
             if len(parti) < 2: return
             
-            # Prendiamo SEMPRE gli ultimi due (ignora fuffa iniziale)
             sq_casa = parti[-2]
             sq_trasf = parti[-1]
             
@@ -111,8 +109,9 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
                 squadra_g = info_g['squadra'].upper()
                 if not squadra_g: continue
                 
-                if squadra_g == vincitore: voto = 10
-                elif squadra_g == perdente: voto = -20
+                # Logica flessibile: controlla se i nomi si contengono a vicenda
+                if squadra_g in vincitore or vincitore in squadra_g: voto = 10
+                elif squadra_g in perdente or perdente in squadra_g: voto = -20
                 else: voto = None
                 
                 if voto is not None:
