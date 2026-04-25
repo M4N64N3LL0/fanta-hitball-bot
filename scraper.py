@@ -77,9 +77,7 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
         soup = BeautifulSoup(res.text, 'html.parser')
         testo_pagina = soup.get_text(separator=' ')
         
-        # PROTEZIONE DATA ERRATA (Cerca solo all'inizio della pagina)
-        testo_inizio = testo_pagina[:1500]
-        m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_inizio)
+        m_data = re.search(r'(\d{2})-(\d{2})-(\d{4})', testo_pagina)
         if not m_data: 
             print(f"      [SKIP] Data non trovata nel referto.", flush=True)
             return
