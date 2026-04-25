@@ -39,6 +39,7 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         mappa = {}
         for g in dati:
             nome_originale = g['nome_reale'].upper()
+            # Manteniamo lettere accentate e apostrofi per il match
             nome_clean = re.sub(r'[^A-ZÀÈÉÌÒÙÁÍÓÚ\'\s]', ' ', nome_originale).strip()
             parole = frozenset(nome_clean.split())
             mappa[parole] = {
@@ -79,8 +80,8 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
         if not m_data: return
         data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
 
-        # --- GESTIONE TAVOLINO ---
-        is_tavolino = "tavolino" in testo_pagina.lower() or (tot_casa == 35 and tot_trasf == 0) or (tot_casa == 0 and tot_trasf == 35)
+        # --- LOGICA TAVOLINO (60-0) ---
+        is_tavolino = "tavolino" in testo_pagina.lower() or (tot_casa == 60 and tot_trasf == 0) or (tot_casa == 0 and tot_trasf == 60)
 
         if is_tavolino:
             h1 = soup.find('h1')
@@ -94,23 +95,26 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
             vincitore = sq_casa if tot_casa > tot_trasf else sq_trasf
             perdente = sq_casa if tot_casa < tot_trasf else sq_trasf
 
-            print(f"      [TAVOLINO] {sq_casa} vs {sq_trasf} -> Vince: {vincitore}", flush=True)
+            print(f"      [TAVOLINO RILEVATO] {sq_casa} vs {sq_trasf} -> Vince: {vincitore}", flush=True)
 
             for parole_json, info_g in mappa.items():
                 squadra_g = info_g.get('squadra', '').upper()
                 if not squadra_g: continue
                 
-                voto = 10 if squadra_g == vincitore else (-20 if squadra_g == perdente else None)
+                # Controllo flessibile sui nomi squadra (es. "CHIVASSO" in "HIT BALL CHIVASSO")
+                voto = 10 if (squadra_g in vincitore or vincitore in squadra_g) else (-20 if (squadra_g in perdente or perdente in squadra_g) else None)
                 
                 if voto is not None:
                     id_fb = info_g['id_documento']
                     if stato_fb.get(id_fb, {}).get('punti_giornate', {}).get(data_match) != voto:
                         db.collection('giocatori').document(id_fb).set({
-                            'nome_reale': info_g['nome_display'], 'squadra': info_g['squadra'],
-                            'is_fem': id_fb in QUOTE_ROSA_FEM, 'punti_giornate': { data_match: voto }
+                            'nome_reale': info_g['nome_display'], 
+                            'squadra': info_g['squadra'],
+                            'is_fem': id_fb in QUOTE_ROSA_FEM, 
+                            'punti_giornate': { data_match: voto }
                         }, merge=True)
                         counter['effettuate'] += 1
-                        print(f"      [TAV-UPDATE] {id_fb} | {voto}pt", flush=True)
+                        print(f"      [TAV-UPDATE] {id_fb} ({squadra_g}) | {voto}pt", flush=True)
             return
 
         # --- ANALISI NORMALE ---
@@ -150,9 +154,12 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
                     counter['risparmiate'] += 1
                 else:
                     db.collection('giocatori').document(id_fb).set({
-                        'nome_reale': info_g['nome_display'], 'categoria': info_g['categoria'],
-                        'prezzo': info_g['prezzo'], 'squadra': info_g['squadra'],
-                        'is_fem': id_fb in QUOTE_ROSA_FEM, 'punti_giornate': { data_match: voto }
+                        'nome_reale': info_g['nome_display'], 
+                        'categoria': info_g['categoria'],
+                        'prezzo': info_g['prezzo'], 
+                        'squadra': info_g['squadra'],
+                        'is_fem': id_fb in QUOTE_ROSA_FEM, 
+                        'punti_giornate': { data_match: voto }
                     }, merge=True)
                     print(f"      [UPDATE] {id_fb} | {voto}pt", flush=True)
                     counter['effettuate'] += 1
