@@ -1,10 +1,17 @@
 import os
+import sys
 import json
 import requests
 import re
 from bs4 import BeautifulSoup
 import firebase_admin
 from firebase_admin import credentials, firestore
+
+# FORZA PYTHON A STAMPARE IN TEMPO REALE SU GITHUB ACTIONS
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+except AttributeError:
+    pass
 
 ID_CAMPIONATI = [39, 41, 42, 43] 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
@@ -33,9 +40,8 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         mappa = {}
         for g in dati:
             nome_originale = g['nome_reale'].upper()
-            # Puliamo per avere solo le lettere del nome
-            nome_clean = re.sub(r'[^A-Z\s]', '', nome_originale).strip()
-            # Salviamo le parole singole (es. ["GIUSEPPE", "MIRRA"])
+            # IL FIX È QUI: Sostituiamo caratteri speciali e apostrofi con SPAZI
+            nome_clean = re.sub(r'[^A-Z\s]', ' ', nome_originale).strip()
             parole = frozenset(nome_clean.split())
             mappa[parole] = {
                 'id_documento': nome_originale,
@@ -45,10 +51,11 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
             }
         return mappa
     except Exception as e: 
-        print(f"Errore caricamento JSON: {e}")
+        print(f"Errore caricamento JSON: {e}", flush=True)
         return {}
 
 def scarica_stato_firebase(db):
+    print("\n>>> Lettura database per ottimizzazione...", flush=True)
     docs = db.collection('giocatori').stream()
     return {doc.id: doc.to_dict() for doc in docs}
 
@@ -80,28 +87,25 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
             for li in ul_node.find_all('li', class_=re.compile(r'list-group-item', re.I)):
                 testo_originale = li.get_text(separator=' ', strip=True)
                 
-                # Semplifichiamo la riga tenendo solo lettere e spazi in maiuscolo
+                # IL FIX È QUI: Coerenza perfetta con la pulizia del JSON
                 testo_clean = re.sub(r'[^A-Z\s]', ' ', testo_originale.upper())
                 parole_nella_riga = testo_clean.split()
 
                 id_fb = None
                 info_g = None
 
-                # --- LA MAGIA DELLA RICERCA INVERSA ---
-                # Scorriamo il JSON e vediamo se c'è un match in questa riga
                 for parole_json, info in mappa.items():
-                    # Se TUTTE le parole del nome (es. GIUSEPPE e MIRRA) sono dentro la riga del sito
                     if all(p in parole_nella_riga for p in parole_json):
                         id_fb = info['id_documento']
                         info_g = info
-                        break # Trovato! Fermiamo la ricerca.
+                        break
                 
                 if not id_fb:
-                    # Se non lo trova, te lo stampa a schermo così indaghiamo cosa c'è scritto davvero!
-                    print(f"      [SKIP] Nessuno dei tuoi giocatori è qui: '{testo_originale}'")
+                    # Filtriamo scritte inutili come "Mancata presentazione" o penalità per non intralciare i log
+                    if "PENALIT" not in testo_originale.upper() and "MANCATA" not in testo_originale.upper():
+                        print(f"      [SKIP] Nessuno dei tuoi giocatori è qui: '{testo_originale}'", flush=True)
                     continue
 
-                # --- CALCOLO DEI PUNTI (Immutato) ---
                 punti_tiri = sum(int(q) * int(v) for q, v in re.findall(r'(\d+)\s*x\s*(2|3)', testo_originale, re.I))
                 if punti_tiri == 0:
                     m_tot = re.search(r'Tot\.\s*(\d+)', testo_originale, re.I)
@@ -131,19 +135,19 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
                         'prezzo': info_g['prezzo'],
                         'punti_giornate': { data_match: voto }
                     }, merge=True)
-                    print(f"      [UPDATE] Trovato: {id_fb} | {voto}pt")
+                    print(f"      [UPDATE] Trovato e aggiornato: {id_fb} | {voto}pt", flush=True)
                     counter['effettuate'] += 1
 
         estrai_e_salva(liste_squadre[0], True)
         estrai_e_salva(liste_squadre[1], False)
-    except Exception as e: print(f"      [ERR] {e}")
+    except Exception as e: print(f"      [ERR] {e}", flush=True)
 
 def recupera_e_analizza(db, mappa):
     stato_fb = scarica_stato_firebase(db)
     counter = {'effettuate': 0, 'risparmiate': 0}
     for camp_id in ID_CAMPIONATI:
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
-        print(f"\n>>> ANALISI CAMPIONATO {camp_id}")
+        print(f"\n>>> ANALISI CAMPIONATO {camp_id}", flush=True)
         try:
             res = requests.get(url_camp, headers=HEADERS, timeout=15)
             soup = BeautifulSoup(res.text, 'html.parser')
@@ -157,8 +161,8 @@ def recupera_e_analizza(db, mappa):
                     m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', riga.get_text())
                     if m_ris:
                         processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), int(m_ris.group(1)), int(m_ris.group(2)), db, mappa, stato_fb, counter)
-        except Exception as e: print(f">>> Errore: {e}")
-    print(f"\n>>> FINE. Scritture: {counter['effettuate']} | Risparmiate: {counter['risparmiate']}")
+        except Exception as e: print(f">>> Errore: {e}", flush=True)
+    print(f"\n>>> FINE. Scritture: {counter['effettuate']} | Risparmiate: {counter['risparmiate']}", flush=True)
 
 if __name__ == "__main__":
     mappa_g = carica_anagrafica_locale("giocatori.json")
