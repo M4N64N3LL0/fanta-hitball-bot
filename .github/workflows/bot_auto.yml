@@ -24,7 +24,7 @@ jobs:
         run: |
           pip install requests beautifulsoup4 firebase-admin
 
-     - name: Esegui lo script trova squadre
+      - name: Esegui lo script trova squadre
         run: python -u trova_squadre.py
 
       - name: Salva il nuovo JSON nel repository
