@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 ID_CAMPIONATI = [39, 41, 42, 43] 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
-print(">>> AVVIO BOT CERCA-SQUADRE...")
+print(">>> AVVIO BOT CERCA-SQUADRE (VERSIONE BLINDATA)...")
 
 # 1. Carichiamo il file JSON attuale 
 try:
@@ -24,8 +24,8 @@ for i, g in enumerate(giocatori):
     parole = frozenset(nome_clean.split())
     mappa_indici[parole] = i
     
-    if 'squadra' not in giocatori[i] or "PLV" in giocatori[i].get('squadra', '').upper():
-        giocatori[i]['squadra'] = ""
+    # AZZERIAMO LE SQUADRE: Cancelliamo i "Referto Partita" presi per sbaglio prima
+    giocatori[i]['squadra'] = ""
 
 giocatori_aggiornati = 0
 
@@ -53,12 +53,15 @@ for camp_id in ID_CAMPIONATI:
                 if len(liste_squadre) < 2:
                     continue
                     
-                # IL FIX È QUI: Usiamo H1 invece di Title per evitare il nome del sito!
                 intestazione = soup_ref.find('h1')
                 if not intestazione:
                     continue
                     
+                # PULIZIA BRUTALE DEL TITOLO
                 titolo = intestazione.get_text(strip=True).upper()
+                # Cancella tutte le "scorie" dal titolo prima di tagliare
+                titolo = re.sub(r'REFERTO\s*PARTITA|REFERTO|PLV\s*HITBALL', '', titolo).strip(' -')
+                
                 squadre_raw = re.split(r'\s+-\s+|\s+VS\s+', titolo)
                 
                 if len(squadre_raw) < 2:
