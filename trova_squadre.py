@@ -8,7 +8,7 @@ HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
 print(">>> AVVIO BOT CERCA-SQUADRE...")
 
-# 1. Carichiamo il file JSON attuale (Senza squadre)
+# 1. Carichiamo il file JSON attuale 
 try:
     with open("giocatori.json", "r", encoding="utf-8") as f:
         giocatori = json.load(f)
@@ -17,8 +17,6 @@ except Exception as e:
     print(f"ERRORE: Impossibile leggere giocatori.json -> {e}")
     exit()
 
-# 2. Creiamo una mappa per trovare subito la posizione (indice) del giocatore nel JSON
-# Usiamo il filtro perfetto (con accenti e apostrofi) che abbiamo creato prima!
 mappa_indici = {}
 for i, g in enumerate(giocatori):
     nome_originale = g['nome_reale'].upper()
@@ -26,8 +24,7 @@ for i, g in enumerate(giocatori):
     parole = frozenset(nome_clean.split())
     mappa_indici[parole] = i
     
-    # Inizializziamo il campo "squadra" vuoto se non esiste
-    if 'squadra' not in giocatori[i]:
+    if 'squadra' not in giocatori[i] or "PLV" in giocatori[i].get('squadra', '').upper():
         giocatori[i]['squadra'] = ""
 
 giocatori_aggiornati = 0
@@ -45,12 +42,10 @@ for camp_id in ID_CAMPIONATI:
             if 'match_id=' in a_tag['href'] or 'referto_id=' in a_tag['href']:
                 url_referto = "https://referto.plvhitball.it/" + a_tag['href'].lstrip('/')
                 
-                # Apriamo il referto
                 res_ref = requests.get(url_referto, headers=HEADERS, timeout=10)
                 soup_ref = BeautifulSoup(res_ref.text, 'html.parser')
                 testo_pagina = soup_ref.get_text(separator=' ')
                 
-                # Saltiamo i tavolini perché le liste giocatori sono vuote o finte
                 if "tavolino" in testo_pagina.lower():
                     continue
                 
@@ -58,18 +53,20 @@ for camp_id in ID_CAMPIONATI:
                 if len(liste_squadre) < 2:
                     continue
                     
-                # Estraiamo i nomi delle due squadre dal titolo della pagina
-                titolo = soup_ref.find('title').get_text(strip=True).upper() if soup_ref.find('title') else ""
+                # IL FIX È QUI: Usiamo H1 invece di Title per evitare il nome del sito!
+                intestazione = soup_ref.find('h1')
+                if not intestazione:
+                    continue
+                    
+                titolo = intestazione.get_text(strip=True).upper()
                 squadre_raw = re.split(r'\s+-\s+|\s+VS\s+', titolo)
                 
                 if len(squadre_raw) < 2:
                     continue
                 
-                # Puliamo i nomi delle squadre
-                sq_casa = re.sub(r'\s*REFERTO.*', '', squadre_raw[0]).strip()
-                sq_trasf = re.sub(r'\s*REFERTO.*', '', squadre_raw[1]).strip()
+                sq_casa = squadre_raw[0].strip()
+                sq_trasf = squadre_raw[1].strip()
 
-                # Funzione interna per abbinare i giocatori alla squadra corretta
                 def assegna_squadra(ul_node, nome_squadra):
                     global giocatori_aggiornati
                     for li in ul_node.find_all('li', class_=re.compile(r'list-group-item', re.I)):
@@ -80,19 +77,17 @@ for camp_id in ID_CAMPIONATI:
                         
                         for parole_json, indice in mappa_indici.items():
                             if all(p in parole_web for p in parole_json):
-                                # Se il giocatore non ha ancora la squadra assegnata, gliela diamo
                                 if not giocatori[indice]['squadra']:
                                     giocatori[indice]['squadra'] = nome_squadra
                                     giocatori_aggiornati += 1
                                     print(f"   [+] {giocatori[indice]['nome_reale']} gioca nel {nome_squadra}")
                                 break
 
-                # Assegniamo la squadra di Casa (lista 0) e Trasferta (lista 1)
                 assegna_squadra(liste_squadre[0], sq_casa)
                 assegna_squadra(liste_squadre[1], sq_trasf)
 
     except Exception as e:
-        print(f"Errore durante l'analisi: {e}")
+        print(f"Errore: {e}")
 
 # 4. Salvataggio del nuovo file
 nome_nuovo_file = "giocatori_con_squadre.json"
@@ -100,5 +95,3 @@ with open(nome_nuovo_file, "w", encoding="utf-8") as f:
     json.dump(giocatori, f, indent=4, ensure_ascii=False)
 
 print(f"\n>>> FINITO! Squadre assegnate a {giocatori_aggiornati} giocatori.")
-print(f">>> È stato creato il file '{nome_nuovo_file}'.")
-print(">>> Rinomina questo file in 'giocatori.json' e usalo per il bot principale!")
