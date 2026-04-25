@@ -44,6 +44,16 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         print(f"Errore caricamento JSON locale: {e}")
         return {}
 
+# 1. NUOVA FUNZIONE: Scarica lo stato attuale di Firebase
+def scarica_stato_firebase(db):
+    print("\n>>> Lettura iniziale del database per ottimizzare le scritture...")
+    docs = db.collection('giocatori').stream()
+    stato = {}
+    for doc in docs:
+        stato[doc.id] = doc.to_dict()
+    print(f">>> Trovati {len(stato)} giocatori attualmente nel database.\n")
+    return stato
+
 def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, is_fem, tav):
     p_base = (punti_tiri * 2) if is_fem else punti_tiri
     malus_auto = -(autohits * 1)
@@ -55,7 +65,7 @@ def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, 
     malus_disc = (-10 if giallo else 0) + (-20 if rosso else 0) + (-20 if tav else 0)
     return p_base + malus_auto + bonus_att + bonus_def + malus_disc
 
-def processa_referto(url, tot_casa, tot_trasf, db, mappa):
+def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_firebase, counter):
     try:
         res = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(res.text, 'html.parser')
@@ -66,8 +76,6 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
         if m_data: data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
         
         if data_match == "0000-00-00": return
-        
-        # CHIAVE DI SALVATAGGIO: SOLO DATA (Es. 2026-04-23)
         chiave_salvataggio = data_match 
 
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
@@ -83,7 +91,6 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 if n_clean not in mappa: continue
                 
                 info_g = mappa[n_clean]
-                is_femmina = n_clean in QUOTE_ROSA_FEM
                 
                 punti_tiri = sum(int(q) * int(v) for q, v in re.findall(r'(\d+)\s*x\s*(2|3)', testo))
                 m_auto = re.search(r'(\d+)\s*x\s*AUTOHIT', testo, re.I)
@@ -96,26 +103,60 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa):
                 tavolino = "tavolino" in testo_pagina.lower()
                 tav_match = tavolino and ((is_casa and tot_casa == 0) or (not is_casa and tot_trasf == 0))
                 
-                voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, is_femmina, tav_match)
+                voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, n_clean in QUOTE_ROSA_FEM, tav_match)
                 
-                # FORZA LA CATEGORIA "FEM" NEL DATABASE E AGGIUNGE IL FLAG
-                categoria_da_salvare = "FEM" if is_femmina else info_g['categoria']
+                # --- 2. IL CONTROLLO MAGICO (DIFFING) ---
+                giocatore_fb = stato_firebase.get(n_clean, {})
+                punti_fb = giocatore_fb.get('punti_giornate', {})
+                
+                # Controlliamo se qualcosa è cambiato rispetto a Firebase
+                gia_presente = punti_fb.get(chiave_salvataggio) == voto
+                stessa_cat = giocatore_fb.get('categoria') == info_g['categoria']
+                stesso_prezzo = giocatore_fb.get('prezzo') == info_g['prezzo']
 
-                db.collection('giocatori').document(n_clean).set({
-                    'nome_reale': info_g['nome_originale'],
-                    'categoria': categoria_da_salvare,
-                    'prezzo': info_g['prezzo'],
-                    'is_fem': is_femmina,
-                    'punti_giornate': { chiave_salvataggio: voto }
-                }, merge=True)
-                
-                print(f"      [OK] {n_clean} | {chiave_salvataggio} | {voto}pt")
+                # Se i dati combaciano perfettamente, non scriviamo nulla!
+                if gia_presente and stessa_cat and stesso_prezzo:
+                    counter['risparmiate'] += 1
+                    print(f"      [SKIP] {n_clean} | Voto già presente, scrittura risparmiata.")
+                else:
+                    # I dati sono nuovi o aggiornati: Prepariamo la scrittura
+                    ref = db.collection('giocatori').document(n_clean)
+                    counter['batch'].set(ref, {
+                        'nome_reale': info_g['nome_originale'],
+                        'categoria': info_g['categoria'],
+                        'prezzo': info_g['prezzo'],
+                        'punti_giornate': { chiave_salvataggio: voto }
+                    }, merge=True)
+                    
+                    counter['effettuate'] += 1
+                    print(f"      [UPDATE] {n_clean} | {chiave_salvataggio} | {voto}pt")
+
+                    # Aggiorniamo la memoria locale così se incontra di nuovo lo stesso giocatore non lo riscrive
+                    if n_clean not in stato_firebase:
+                        stato_firebase[n_clean] = {'punti_giornate': {}}
+                    stato_firebase[n_clean]['punti_giornate'][chiave_salvataggio] = voto
+                    stato_firebase[n_clean]['categoria'] = info_g['categoria']
+                    stato_firebase[n_clean]['prezzo'] = info_g['prezzo']
+
+                    # Firebase accetta massimo 500 scritture per batch. A 400 inviamo il pacco e ne apriamo uno nuovo.
+                    if counter['effettuate'] % 400 == 0:
+                        counter['batch'].commit()
+                        counter['batch'] = db.batch()
+                        print("      >>> Inviato blocco intermedio a Firebase...")
 
         estrai_e_salva(liste_squadre[0], True)
         estrai_e_salva(liste_squadre[1], False)
     except Exception as e: print(f"      [ERR] {e}")
 
 def recupera_e_analizza(db, mappa):
+    # Inizializziamo lo stato e i contatori
+    stato_firebase = scarica_stato_firebase(db)
+    counter = {
+        'batch': db.batch(),
+        'risparmiate': 0,
+        'effettuate': 0
+    }
+
     for camp_id in ID_CAMPIONATI:
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
         print(f"\n>>> SCANSIONE CAMPIONATO {camp_id}")
@@ -131,12 +172,22 @@ def recupera_e_analizza(db, mappa):
                             if "Risultato:" in riga.get_text(): break
                     m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', riga.get_text())
                     if m_ris:
-                        processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), int(m_ris.group(1)), int(m_ris.group(2)), db, mappa)
+                        processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), int(m_ris.group(1)), int(m_ris.group(2)), db, mappa, stato_firebase, counter)
         except Exception as e: print(f">>> Errore: {e}")
+
+    # Commit finale per inviare le ultime scritture rimaste nel batch
+    if counter['effettuate'] % 400 != 0 and counter['effettuate'] > 0:
+        counter['batch'].commit()
+
+    # Stampiamo il bollettino della vittoria
+    print(f"\n=========================================")
+    print(f">>> AGGIORNAMENTO COMPLETATO!")
+    print(f">>> Scritture Inviate su Firebase: {counter['effettuate']}")
+    print(f">>> Scritture Risparmiate:         {counter['risparmiate']}")
+    print(f"=========================================\n")
 
 if __name__ == "__main__":
     mappa_g = carica_anagrafica_locale("giocatori.json")
     if mappa_g:
         db_fs = inizializza_firebase()
         recupera_e_analizza(db_fs, mappa_g)
-        print("\n>>> AGGIORNAMENTO COMPLETATO CON FORMATO DATA E CATEGORIA FEM.")
