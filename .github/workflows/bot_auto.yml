@@ -24,7 +24,13 @@ jobs:
         run: |
           pip install requests beautifulsoup4 firebase-admin
 
-      - name: Esecuzione Scraper
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        run: python -u scraper.py
+      - name: Riparazione e Pulizia JSON
+        run: python -u ripara_json.py
+
+      - name: Salva JSON corretto nel repository
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add giocatori.json
+          git commit -m "Rimossi i due punti e pulite le squadre"
+          git push
