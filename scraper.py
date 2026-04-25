@@ -39,7 +39,6 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         mappa = {}
         for g in dati:
             nome_originale = g['nome_reale'].upper()
-            # Manteniamo lettere accentate e apostrofi per il match
             nome_clean = re.sub(r'[^A-ZÀÈÉÌÒÙÁÍÓÚ\'\s]', ' ', nome_originale).strip()
             parole = frozenset(nome_clean.split())
             mappa[parole] = {
@@ -47,7 +46,7 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
                 'nome_display': g['nome_reale'],
                 'categoria': g.get('categoria', 'MISTO'),
                 'prezzo': g.get('prezzo', 0),
-                'squadra': g.get('squadra', '')
+                'squadra': g.get('squadra', '').strip(" :-") # PULIZIA PREVENTIVA
             }
         return mappa
     except Exception as e: 
@@ -55,7 +54,7 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         return {}
 
 def scarica_stato_firebase(db):
-    print("\n>>> Lettura database per ottimizzazione...", flush=True)
+    print("\n>>> Lettura database Firebase...", flush=True)
     docs = db.collection('giocatori').stream()
     return {doc.id: doc.to_dict() for doc in docs}
 
@@ -80,41 +79,44 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
         if not m_data: return
         data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
 
-        # --- LOGICA TAVOLINO (60-0) ---
+        # --- TAVOLINO ---
         is_tavolino = "tavolino" in testo_pagina.lower() or (tot_casa == 60 and tot_trasf == 0) or (tot_casa == 0 and tot_trasf == 60)
 
         if is_tavolino:
             h1 = soup.find('h1')
             if not h1: return
             titolo = h1.get_text(strip=True).upper()
-            titolo = re.sub(r'REFERTO\s*PARTITA|REFERTO|PLV\s*HITBALL', '', titolo).strip(' -')
+            titolo = re.sub(r'REFERTO\s*PARTITA|REFERTO|PLV\s*HITBALL', '', titolo).strip(" :-")
             squadre_raw = re.split(r'\s+-\s+|\s+VS\s+', titolo)
             if len(squadre_raw) < 2: return
             
-            sq_casa, sq_trasf = squadre_raw[0].strip(), squadre_raw[1].strip()
+            sq_casa = squadre_raw[0].strip(" :-")
+            sq_trasf = squadre_raw[1].strip(" :-")
             vincitore = sq_casa if tot_casa > tot_trasf else sq_trasf
             perdente = sq_casa if tot_casa < tot_trasf else sq_trasf
 
-            print(f"      [TAVOLINO RILEVATO] {sq_casa} vs {sq_trasf} -> Vince: {vincitore}", flush=True)
+            print(f"      [TAVOLINO] {vincitore} batte {perdente}", flush=True)
 
             for parole_json, info_g in mappa.items():
-                squadra_g = info_g.get('squadra', '').upper()
+                squadra_g = info_g['squadra'].upper()
                 if not squadra_g: continue
                 
-                # Controllo flessibile sui nomi squadra (es. "CHIVASSO" in "HIT BALL CHIVASSO")
-                voto = 10 if (squadra_g in vincitore or vincitore in squadra_g) else (-20 if (squadra_g in perdente or perdente in squadra_g) else None)
+                # Match esatto senza sporcizia
+                if squadra_g == vincitore: voto = 10
+                elif squadra_g == perdente: voto = -20
+                else: voto = None
                 
                 if voto is not None:
                     id_fb = info_g['id_documento']
-                    if stato_fb.get(id_fb, {}).get('punti_giornate', {}).get(data_match) != voto:
-                        db.collection('giocatori').document(id_fb).set({
-                            'nome_reale': info_g['nome_display'], 
-                            'squadra': info_g['squadra'],
-                            'is_fem': id_fb in QUOTE_ROSA_FEM, 
-                            'punti_giornate': { data_match: voto }
-                        }, merge=True)
-                        counter['effettuate'] += 1
-                        print(f"      [TAV-UPDATE] {id_fb} ({squadra_g}) | {voto}pt", flush=True)
+                    # Aggiorna SEMPRE la squadra su Firebase per correggere l'errore precedente
+                    db.collection('giocatori').document(id_fb).set({
+                        'nome_reale': info_g['nome_display'], 
+                        'squadra': info_g['squadra'],
+                        'is_fem': id_fb in QUOTE_ROSA_FEM, 
+                        'punti_giornate': { data_match: voto }
+                    }, merge=True)
+                    counter['effettuate'] += 1
+                    print(f"      [CORREZIONE TAV.] {id_fb} -> {voto}pt", flush=True)
             return
 
         # --- ANALISI NORMALE ---
@@ -150,19 +152,17 @@ def processa_referto(url, tot_casa, tot_trasf, db, mappa, stato_fb, counter):
                 fatti, subiti = (tot_casa, tot_trasf) if is_casa else (tot_trasf, tot_casa)
                 voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, id_fb in QUOTE_ROSA_FEM, False)
                 
-                if stato_fb.get(id_fb, {}).get('punti_giornate', {}).get(data_match) == voto:
-                    counter['risparmiate'] += 1
-                else:
+                # Se il voto è diverso, sovrascriviamo (così correggiamo anche i vecchi errori)
+                if stato_fb.get(id_fb, {}).get('punti_giornate', {}).get(data_match) != voto:
                     db.collection('giocatori').document(id_fb).set({
-                        'nome_reale': info_g['nome_display'], 
-                        'categoria': info_g['categoria'],
-                        'prezzo': info_g['prezzo'], 
-                        'squadra': info_g['squadra'],
-                        'is_fem': id_fb in QUOTE_ROSA_FEM, 
-                        'punti_giornate': { data_match: voto }
+                        'nome_reale': info_g['nome_display'], 'categoria': info_g['categoria'],
+                        'prezzo': info_g['prezzo'], 'squadra': info_g['squadra'],
+                        'is_fem': id_fb in QUOTE_ROSA_FEM, 'punti_giornate': { data_match: voto }
                     }, merge=True)
                     print(f"      [UPDATE] {id_fb} | {voto}pt", flush=True)
                     counter['effettuate'] += 1
+                else:
+                    counter['risparmiate'] += 1
 
         estrai_e_salva(liste_squadre[0], True)
         estrai_e_salva(liste_squadre[1], False)
@@ -180,11 +180,13 @@ def recupera_e_analizza(db, mappa):
             for a_tag in soup.find_all('a', href=True):
                 if 'match_id=' in a_tag['href'] or 'referto_id=' in a_tag['href']:
                     riga = a_tag
+                    testo_riga = ""
                     for _ in range(5):
                         if riga.parent:
                             riga = riga.parent
-                            if "Risultato:" in riga.get_text(): break
-                    m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', riga.get_text())
+                            testo_riga = riga.get_text()
+                            if "Risultato:" in testo_riga: break
+                    m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', testo_riga, re.I)
                     if m_ris:
                         processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), int(m_ris.group(1)), int(m_ris.group(2)), db, mappa, stato_fb, counter)
         except Exception as e: print(f">>> Errore: {e}", flush=True)
