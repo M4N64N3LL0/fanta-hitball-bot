@@ -2,7 +2,6 @@ import os
 import sys
 import json
 import re
-import csv
 import cloudscraper
 from bs4 import BeautifulSoup
 import firebase_admin
@@ -16,7 +15,6 @@ except AttributeError:
 ID_CAMPIONATI = [39, 41, 42, 43] 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
-# --- LA MAGIA ANTI-BLOCCO ---
 # Crea lo "scassinatore" che si finge un browser umano
 scraper_bypasser = cloudscraper.create_scraper()
 
@@ -72,7 +70,6 @@ def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, 
 
 def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
     try:
-        # Usa lo scraper anti-bot con timeout a 15 secondi
         res = scraper_bypasser.get(url, timeout=15)
         res.raise_for_status()
         soup = BeautifulSoup(res.text, 'html.parser')
@@ -160,7 +157,7 @@ def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
         estrai_e_salva(liste_squadre[1], False)
         
     except cloudscraper.exceptions.CloudflareChallengeError as e:
-        print(f"      [BLOCCO CLOUDFLARE IMPOSSIBILE DA SUPERARE] Riproverà al prossimo avvio.", flush=True)
+        print(f"      [BLOCCO CLOUDFLARE] Riproverà al prossimo avvio.", flush=True)
     except Exception as e: 
         print(f"      [ERR] {e}", flush=True)
 
@@ -173,7 +170,6 @@ def recupera_e_analizza(db, mappa):
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
         print(f"\n>>> ANALISI CAMPIONATO {camp_id}", flush=True)
         try:
-            # Usa lo scraper anti-bot con timeout a 20 secondi
             res = scraper_bypasser.get(url_camp, timeout=20)
             soup = BeautifulSoup(res.text, 'html.parser')
             for a_tag in soup.find_all('a', href=True):
@@ -212,21 +208,7 @@ def recupera_e_analizza(db, mappa):
         })
         giocatori_aggiornati += 1
 
-    print(f">>> OPERAZIONE COMPLETATA! Database azzerato e riscritto in modo pulito per {giocatori_aggiornati} giocatori.", flush=True)
-
-    # CREAZIONE FILE CSV (Mantenuta in caso serva in futuro)
-    try:
-        with open("giocatori_totali.csv", mode='w', encoding='utf-8', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(["Nome", "Categoria", "Punti_Totali"])
-            for parole_json, info_g in mappa.items():
-                id_fb = info_g['id_documento']
-                nome = info_g['nome_display'].strip()
-                cat = info_g.get('categoria', 'MISTO').strip()
-                voti_giornate = memoria_punti.get(id_fb, {})
-                writer.writerow([nome, cat, int(sum(voti_giornate.values()))])
-    except Exception as e:
-        print(f"❌ Errore durante la creazione del file CSV: {e}", flush=True)
+    print(f">>> OPERAZIONE COMPLETATA! Database aggiornato per {giocatori_aggiornati} giocatori.", flush=True)
 
 if __name__ == "__main__":
     mappa_g = carica_anagrafica_locale("giocatori.json")
