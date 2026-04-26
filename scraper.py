@@ -3,6 +3,7 @@ import sys
 import json
 import requests
 import re
+import csv  # <-- AGGIUNTO PER CREARE IL FILE
 from bs4 import BeautifulSoup
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -36,6 +37,7 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
     try:
         with open(percorso_file, 'r', encoding='utf-8') as f:
             dati = json.load(f)
+        
         mappa = {}
         for g in dati:
             nome_originale = g['nome_reale'].upper()
@@ -75,7 +77,6 @@ def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
         if not m_data: return
         data_match = f"{m_data.group(3)}-{m_data.group(2)}-{m_data.group(1)}"
 
-        # --- GESTIONE TAVOLINO ---
         is_tavolino = "tavolino" in testo_pagina.lower() or (tot_casa == 60 and tot_trasf == 0) or (tot_casa == 0 and tot_trasf == 60)
 
         if is_tavolino:
@@ -114,11 +115,9 @@ def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
                 
                 if voto is not None:
                     id_fb = info_g['id_documento']
-                    # Salva il voto in memoria RAM (non su Firebase ancora)
                     memoria_punti[id_fb][data_match] = voto
             return
 
-        # --- ANALISI NORMALE ---
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         if len(liste_squadre) < 2: return
 
@@ -150,7 +149,6 @@ def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
                 fatti, subiti = (tot_casa, tot_trasf) if is_casa else (tot_trasf, tot_casa)
                 voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, id_fb in QUOTE_ROSA_FEM, False)
                 
-                # Salva il voto in memoria RAM
                 memoria_punti[id_fb][data_match] = voto
 
         estrai_e_salva(liste_squadre[0], True)
@@ -162,12 +160,10 @@ def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
         print(f"      [ERR] {e}", flush=True)
 
 def recupera_e_analizza(db, mappa):
-    # 1. Creiamo un "quaderno vuoto" per segnarci tutti i punti
     memoria_punti = {}
     for info in mappa.values():
         memoria_punti[info['id_documento']] = {}
 
-    # 2. Scansioniamo i campionati e riempiamo il quaderno in memoria
     for camp_id in ID_CAMPIONATI:
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
         print(f"\n>>> ANALISI CAMPIONATO {camp_id}", flush=True)
@@ -188,7 +184,6 @@ def recupera_e_analizza(db, mappa):
                         processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), int(m_ris.group(1)), int(m_ris.group(2)), mappa, memoria_punti)
         except Exception as e: print(f">>> Errore Campionato {camp_id}: {e}", flush=True)
 
-    # 3. FASE DI RISCRITTURA TOTALE SU FIREBASE
     print("\n>>> INIZIO RISCRITTURA DA ZERO SU FIREBASE...", flush=True)
     giocatori_aggiornati = 0
 
@@ -198,7 +193,6 @@ def recupera_e_analizza(db, mappa):
         
         doc_ref = db.collection('giocatori').document(id_fb)
         
-        # 1. Mantiene sani i dati anagrafici
         doc_ref.set({
             'nome_reale': info_g['nome_display'],
             'categoria': info_g['categoria'],
@@ -207,13 +201,36 @@ def recupera_e_analizza(db, mappa):
             'is_fem': id_fb in QUOTE_ROSA_FEM
         }, merge=True)
         
-        # 2. LA MAGIA: Cancella i vecchi punti "fantasma" e sovrascrive tutto con quelli calcolati ora!
         doc_ref.update({
             'punti_giornate': voti_finali
         })
         giocatori_aggiornati += 1
 
     print(f">>> OPERAZIONE COMPLETATA! Database azzerato e riscritto in modo pulito per {giocatori_aggiornati} giocatori.", flush=True)
+
+    # =========================================================
+    # LA MAGIA AGGIUNTA: CREAZIONE DEL FILE CSV PER L'ALGORITMO
+    # =========================================================
+    print("\n>>> INIZIO CREAZIONE FILE CSV PER L'ALGORITMO (Nessuna chiamata a Firebase)...", flush=True)
+    try:
+        with open("giocatori_totali.csv", mode='w', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["Nome", "Categoria", "Punti_Totali"])
+            
+            for parole_json, info_g in mappa.items():
+                id_fb = info_g['id_documento']
+                nome = info_g['nome_display'].strip()
+                cat = info_g.get('categoria', 'MISTO').strip()
+                
+                # Somma banalmente tutti i punti raccolti nella memoria dello scraper
+                voti_giornate = memoria_punti.get(id_fb, {})
+                punti_totali = sum(voti_giornate.values())
+                
+                writer.writerow([nome, cat, int(punti_totali)])
+                
+        print("✅ File 'giocatori_totali.csv' creato con successo!", flush=True)
+    except Exception as e:
+        print(f"❌ Errore durante la creazione del file CSV: {e}", flush=True)
 
 if __name__ == "__main__":
     mappa_g = carica_anagrafica_locale("giocatori.json")
