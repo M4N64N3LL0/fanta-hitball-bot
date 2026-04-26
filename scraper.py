@@ -1,3 +1,4 @@
+import cloudscraper
 import os
 import sys
 import json
