@@ -3,7 +3,6 @@ import sys
 import json
 import requests
 import re
-import csv  # <-- AGGIUNTO PER CREARE IL FILE
 from bs4 import BeautifulSoup
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -208,32 +207,4 @@ def recupera_e_analizza(db, mappa):
 
     print(f">>> OPERAZIONE COMPLETATA! Database azzerato e riscritto in modo pulito per {giocatori_aggiornati} giocatori.", flush=True)
 
-    # =========================================================
-    # LA MAGIA AGGIUNTA: CREAZIONE DEL FILE CSV PER L'ALGORITMO
-    # =========================================================
-    print("\n>>> INIZIO CREAZIONE FILE CSV PER L'ALGORITMO (Nessuna chiamata a Firebase)...", flush=True)
-    try:
-        with open("giocatori_totali.csv", mode='w', encoding='utf-8', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(["Nome", "Categoria", "Punti_Totali"])
-            
-            for parole_json, info_g in mappa.items():
-                id_fb = info_g['id_documento']
-                nome = info_g['nome_display'].strip()
-                cat = info_g.get('categoria', 'MISTO').strip()
-                
-                # Somma banalmente tutti i punti raccolti nella memoria dello scraper
-                voti_giornate = memoria_punti.get(id_fb, {})
-                punti_totali = sum(voti_giornate.values())
-                
-                writer.writerow([nome, cat, int(punti_totali)])
-                
-        print("✅ File 'giocatori_totali.csv' creato con successo!", flush=True)
-    except Exception as e:
-        print(f"❌ Errore durante la creazione del file CSV: {e}", flush=True)
-
-if __name__ == "__main__":
-    mappa_g = carica_anagrafica_locale("giocatori.json")
-    if mappa_g:
-        db_fs = inizializza_firebase()
-        recupera_e_analizza(db_fs, mappa_g)
+   
