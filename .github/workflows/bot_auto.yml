@@ -22,7 +22,7 @@ jobs:
 
       - name: Installazione librerie
         run: |
-          pip install requests beautifulsoup4 firebase-admin
+          pip install requests beautifulsoup4 firebase-admin cloudscraper
 
       - name: Esecuzione Scraper definitivo
         run: python -u scraper.py
