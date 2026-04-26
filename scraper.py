@@ -45,11 +45,10 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
             nome_clean = re.sub(r'[^A-ZÀÈÉÌÒÙÁÍÓÚ\'\s]', ' ', nome_originale).strip()
             parole = frozenset(nome_clean.split())
             mappa[parole] = {
-                'id_documento': nome_originale,
-                'nome_display': g['nome_reale'],
-                'categoria': g.get('categoria', 'MISTO'),
-                'prezzo': g.get('prezzo', 0),
-                'squadra': g.get('squadra', '').strip(" :-") 
+ - name: Esecuzione Scraper definitivo
+        run: python -u scraper.py
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
             }
         return mappa
     except Exception as e: 
