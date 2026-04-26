@@ -13,8 +13,9 @@ try:
 except AttributeError:
     pass
 
-ID_CAMPIONATI = [39, 41, 42, 43] 
+ID_CAMPIONATI =0[39, 41, 42, 43] 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+scraper_bypasser = cloudscraper.create_scraper()
 
 QUOTE_ROSA_FEM = [
     "FEDERICA FUNNONE", "MARTINA LUPO", "SABRINA CAPITOLO", "ARIANNA VISMARA", 
@@ -68,7 +69,7 @@ def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, 
 
 def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
     try:
-        res = requests.get(url, headers=HEADERS, timeout=10)
+       res = scraper_bypasser.get(url, timeout=15)
         res.raise_for_status()
         soup = BeautifulSoup(res.text, 'html.parser')
         testo_pagina = soup.get_text(separator=' ')
@@ -168,7 +169,7 @@ def recupera_e_analizza(db, mappa):
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
         print(f"\n>>> ANALISI CAMPIONATO {camp_id}", flush=True)
         try:
-            res = requests.get(url_camp, headers=HEADERS, timeout=15)
+           res = scraper_bypasser.get(url_camp, timeout=20)
             soup = BeautifulSoup(res.text, 'html.parser')
             for a_tag in soup.find_all('a', href=True):
                 if 'match_id=' in a_tag['href'] or 'referto_id=' in a_tag['href']:
