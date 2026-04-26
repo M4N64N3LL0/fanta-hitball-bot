@@ -24,7 +24,7 @@ jobs:
         run: |
           pip install requests beautifulsoup4 firebase-admin
 
-      - name: Esecuzione Scraper Definitivo
+      - name: Esecuzione Scraper definitivo
+        run: python -u scraper.py
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        run: python -u scraper.py
