@@ -15,7 +15,6 @@ except AttributeError:
 ID_CAMPIONATI = [39, 41, 42, 43] 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
-# Crea lo "scassinatore" che si finge un browser umano
 scraper_bypasser = cloudscraper.create_scraper()
 
 QUOTE_ROSA_FEM = [
@@ -58,17 +57,25 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         return {}
 
 def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, is_fem, tav):
+    # La base pulita dei tiri in campo (già raddoppiata se è FEM)
     p_base = (punti_tiri * 2) if is_fem else punti_tiri
+    
     malus_auto = -(autohits * 1)
     bonus_att = 5 if fatti >= 76 else (2 if fatti >= 51 else 0)
+    
     if subiti <= 50: bonus_def = 5
     elif subiti <= 75: bonus_def = 2
     elif subiti >= 101: bonus_def = -5
     else: bonus_def = 0
+    
     malus_disc = (-10 if giallo else 0) + (-20 if rosso else 0) + (-20 if tav else 0)
-    return p_base + malus_auto + bonus_att + bonus_def + malus_disc
+    
+    totale = p_base + malus_auto + bonus_att + bonus_def + malus_disc
 
-def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
+    # Ritorniamo sia il TOTALE della partita sia la BASE PURA dei tiri
+    return totale, p_base
+
+def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti, memoria_base):
     try:
         res = scraper_bypasser.get(url, timeout=15)
         res.raise_for_status()
@@ -103,6 +110,7 @@ def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
                 if not squadra_g: continue
                 
                 voto = None
+                
                 if squadra_g in vincitore or vincitore in squadra_g: 
                     voto = 10
                 elif squadra_g in perdente or perdente in squadra_g: 
@@ -111,13 +119,16 @@ def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
                     parole_sq = [p for p in squadra_g.split() if len(p) > 3]
                     for p in parole_sq:
                         if p in vincitore: 
-                            voto = 10; break
+                            voto = 10
+                            break
                         elif p in perdente: 
-                            voto = -20; break
+                            voto = -20
+                            break
                 
                 if voto is not None:
                     id_fb = info_g['id_documento']
                     memoria_punti[id_fb][data_match] = voto
+                    memoria_base[id_fb][data_match] = 0 # Tavolino = 0 tiri di base
             return
 
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
@@ -149,9 +160,11 @@ def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
                 rosso = li.find(class_=re.compile(r'danger|red', re.I)) is not None
                 
                 fatti, subiti = (tot_casa, tot_trasf) if is_casa else (tot_trasf, tot_casa)
-                voto = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, id_fb in QUOTE_ROSA_FEM, False)
                 
-                memoria_punti[id_fb][data_match] = voto
+                voto_totale, base_pura = calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, id_fb in QUOTE_ROSA_FEM, False)
+                
+                memoria_punti[id_fb][data_match] = voto_totale
+                memoria_base[id_fb][data_match] = base_pura
 
         estrai_e_salva(liste_squadre[0], True)
         estrai_e_salva(liste_squadre[1], False)
@@ -163,8 +176,10 @@ def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti):
 
 def recupera_e_analizza(db, mappa):
     memoria_punti = {}
+    memoria_base = {} 
     for info in mappa.values():
         memoria_punti[info['id_documento']] = {}
+        memoria_base[info['id_documento']] = {}
 
     for camp_id in ID_CAMPIONATI:
         url_camp = f"https://referto.plvhitball.it/index.php?route=championship/championship/view&championship_id={camp_id}"
@@ -183,7 +198,7 @@ def recupera_e_analizza(db, mappa):
                             if "Risultato:" in testo_riga: break
                     m_ris = re.search(r'Risultato:\s*(\d+)\s*-\s*(\d+)', testo_riga, re.I)
                     if m_ris:
-                        processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), int(m_ris.group(1)), int(m_ris.group(2)), mappa, memoria_punti)
+                        processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), int(m_ris.group(1)), int(m_ris.group(2)), mappa, memoria_punti, memoria_base)
         except Exception as e: print(f">>> Errore Campionato {camp_id}: {e}", flush=True)
 
     print("\n>>> INIZIO RISCRITTURA DA ZERO SU FIREBASE...", flush=True)
@@ -192,6 +207,7 @@ def recupera_e_analizza(db, mappa):
     for parole_json, info_g in mappa.items():
         id_fb = info_g['id_documento']
         voti_finali = memoria_punti[id_fb]
+        base_finali = memoria_base[id_fb]
         
         doc_ref = db.collection('giocatori').document(id_fb)
         
@@ -203,8 +219,10 @@ def recupera_e_analizza(db, mappa):
             'is_fem': id_fb in QUOTE_ROSA_FEM
         }, merge=True)
         
+        # Salviamo sia il totale sia la base pulita
         doc_ref.update({
-            'punti_giornate': voti_finali
+            'punti_giornate': voti_finali,
+            'punti_base_giornate': base_finali 
         })
         giocatori_aggiornati += 1
 
