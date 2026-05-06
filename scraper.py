@@ -57,7 +57,6 @@ def carica_anagrafica_locale(percorso_file="giocatori.json"):
         return {}
 
 def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, is_fem, tav):
-    # La base pulita dei tiri in campo (già raddoppiata se è FEM)
     p_base = (punti_tiri * 2) if is_fem else punti_tiri
     
     malus_auto = -(autohits * 1)
@@ -72,7 +71,6 @@ def calcola_punteggio_fanta(punti_tiri, autohits, fatti, subiti, giallo, rosso, 
     
     totale = p_base + malus_auto + bonus_att + bonus_def + malus_disc
 
-    # Ritorniamo sia il TOTALE della partita sia la BASE PURA dei tiri
     return totale, p_base
 
 def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti, memoria_base):
@@ -128,7 +126,7 @@ def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti, memoria_bas
                 if voto is not None:
                     id_fb = info_g['id_documento']
                     memoria_punti[id_fb][data_match] = voto
-                    memoria_base[id_fb][data_match] = 0 # Tavolino = 0 tiri di base
+                    memoria_base[id_fb][data_match] = 0
             return
 
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
@@ -219,12 +217,17 @@ def recupera_e_analizza(db, mappa):
             'is_fem': id_fb in QUOTE_ROSA_FEM
         }, merge=True)
         
-        # Salviamo sia il totale sia la base pulita
         doc_ref.update({
             'punti_giornate': voti_finali,
             'punti_base_giornate': base_finali 
         })
         giocatori_aggiornati += 1
+
+    # 🔥 LA MAGIA CHE SBLOCCA L'APP: AGGIORNA IL SEMAFORO DELLA CACHE 🔥
+    print("\n>>> AGGIORNO IL SEMAFORO DELLA CACHE PER L'APP...", flush=True)
+    db.collection('configurazioni').document('aggiornamenti').set({
+        'classifica_update': firestore.SERVER_TIMESTAMP
+    }, merge=True)
 
     print(f">>> OPERAZIONE COMPLETATA! Database aggiornato per {giocatori_aggiornati} giocatori.", flush=True)
 
