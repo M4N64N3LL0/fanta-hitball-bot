@@ -198,7 +198,14 @@ def recupera_e_analizza(db, mappa):
                     if m_ris:
                         processa_referto("https://referto.plvhitball.it/" + a_tag['href'].lstrip('/'), int(m_ris.group(1)), int(m_ris.group(2)), mappa, memoria_punti, memoria_base)
         except Exception as e: print(f">>> Errore Campionato {camp_id}: {e}", flush=True)
-
+print("\n>>> SALVATAGGIO BACKUP LOCALE...", flush=True)
+    backup_data = {
+        'punti_finali': memoria_punti,
+        'punti_base': memoria_base
+    }
+    with open('backup_dati_plv.json', 'w', encoding='utf-8') as f:
+        json.dump(backup_data, f, indent=4, ensure_ascii=False)
+    print(">>> Backup salvato in 'backup_dati_plv.json'.")
     print("\n>>> INIZIO RISCRITTURA DA ZERO SU FIREBASE...", flush=True)
     giocatori_aggiornati = 0
 
