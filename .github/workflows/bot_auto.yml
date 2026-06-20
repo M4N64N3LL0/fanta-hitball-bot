@@ -1,9 +1,6 @@
 name: Aggiornamento Punti FantaHitball
 
 on:
-  schedule:
-    # Esegue il bot alle 09:00, 18:00 e 00:00 italiane (ora legale)
-    - cron: '0 7,16,22 * * *'
     
   workflow_dispatch: # Ti permette di farlo partire a mano cliccando su "Run workflow"
 
