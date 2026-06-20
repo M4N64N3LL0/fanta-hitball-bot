@@ -205,7 +205,7 @@ def recupera_e_analizza(db, mappa):
     }
     with open('backup_dati_plv.json', 'w', encoding='utf-8') as f:
         json.dump(backup_data, f, indent=4, ensure_ascii=False)
-    print(">>> Backup salvato in 'backup_dati_plv.json'.")
+    print(">>> BACKUP_FILE_CREATED: backup_dati_plv.json")
     print("\n>>> INIZIO RISCRITTURA DA ZERO SU FIREBASE...", flush=True)
     giocatori_aggiornati = 0
 
