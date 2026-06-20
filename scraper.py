@@ -231,7 +231,7 @@ def recupera_e_analizza(db, mappa):
         giocatori_aggiornati += 1
     print("\n>>> ESPORTO I DATI SU FILE JSON...", flush=True)
 
-        export_punti = {}
+    export_punti = {}
     classifica_totale = {}
 
     for parole_json, info_g in mappa.items():
