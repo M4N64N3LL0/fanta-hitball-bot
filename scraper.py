@@ -229,7 +229,23 @@ def recupera_e_analizza(db, mappa):
             'punti_base_giornate': base_finali 
         })
         giocatori_aggiornati += 1
+    print("\n>>> ESPORTO I DATI SU FILE JSON...", flush=True)
 
+    export_punti = {}
+
+    for parole_json, info_g in mappa.items():
+        id_fb = info_g['id_documento']
+
+        export_punti[id_fb] = {
+            "nome_reale": info_g['nome_display'],
+            "categoria": info_g['categoria'],
+            "prezzo": info_g['prezzo'],
+            "punti_giornate": memoria_punti[id_fb],
+            "punti_base_giornate": memoria_base[id_fb]
+        }
+
+    with open("export_punti.json", "w", encoding="utf-8") as f:
+        json.dump(export_punti, f, ensure_ascii=False, indent=4)
     # 🔥 LA MAGIA CHE SBLOCCA L'APP: AGGIORNA IL SEMAFORO DELLA CACHE 🔥
     print("\n>>> AGGIORNO IL SEMAFORO DELLA CACHE PER L'APP...", flush=True)
     db.collection('configurazioni').document('aggiornamenti').set({
