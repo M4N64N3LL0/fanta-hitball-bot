@@ -231,21 +231,42 @@ def recupera_e_analizza(db, mappa):
         giocatori_aggiornati += 1
     print("\n>>> ESPORTO I DATI SU FILE JSON...", flush=True)
 
-    export_punti = {}
+        export_punti = {}
+    classifica_totale = {}
 
     for parole_json, info_g in mappa.items():
         id_fb = info_g['id_documento']
+
+        punti = memoria_punti[id_fb]
+        punti_base = memoria_base[id_fb]
+
+        totale = sum(punti.values())
+        totale_base = sum(punti_base.values())
 
         export_punti[id_fb] = {
             "nome_reale": info_g['nome_display'],
             "categoria": info_g['categoria'],
             "prezzo": info_g['prezzo'],
-            "punti_giornate": memoria_punti[id_fb],
-            "punti_base_giornate": memoria_base[id_fb]
+            "punti_giornate": punti,
+            "punti_base_giornate": punti_base
+        }
+
+        classifica_totale[id_fb] = {
+            "nome_reale": info_g['nome_display'],
+            "categoria": info_g['categoria'],
+            "prezzo": info_g['prezzo'],
+            "punti_totali": totale,
+            "punti_base_totali": totale_base
         }
 
     with open("export_punti.json", "w", encoding="utf-8") as f:
         json.dump(export_punti, f, ensure_ascii=False, indent=4)
+
+    with open("classifica_totale.json", "w", encoding="utf-8") as f:
+        json.dump(classifica_totale, f, ensure_ascii=False, indent=4)
+
+    print(">>> export_punti.json creato.", flush=True)
+    print(">>> classifica_totale.json creato.", flush=True)
     # 🔥 LA MAGIA CHE SBLOCCA L'APP: AGGIORNA IL SEMAFORO DELLA CACHE 🔥
     print("\n>>> AGGIORNO IL SEMAFORO DELLA CACHE PER L'APP...", flush=True)
     db.collection('configurazioni').document('aggiornamenti').set({
