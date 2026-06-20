@@ -28,3 +28,9 @@ jobs:
         run: python -u scraper.py
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Upload backup dati
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-dati-plv
+          path: backup_dati_plv.json
