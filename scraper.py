@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import json
 import re
 import cloudscraper
 from bs4 import BeautifulSoup
@@ -129,14 +128,7 @@ def processa_referto(url, tot_casa, tot_trasf, mappa, memoria_punti, memoria_bas
                     memoria_punti[id_fb][data_match] = voto
                     memoria_base[id_fb][data_match] = 0
             return
-# SALVATAGGIO LOCALE PER CONTROLLO TOTALE
-    backup_data = {
-        'punti_finali': memoria_punti,
-        'punti_base': memoria_base
-    }
-    with open('backup_dati_plv.json', 'w', encoding='utf-8') as f:
-        json.dump(backup_data, f, indent=4)
-    print(">>> Backup locale 'backup_dati_plv.json' creato.")
+
         liste_squadre = soup.find_all('ul', class_=re.compile(r'list-group', re.I))
         if len(liste_squadre) < 2: return
 
